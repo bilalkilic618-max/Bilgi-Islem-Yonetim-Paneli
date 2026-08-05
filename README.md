@@ -9,8 +9,6 @@ Kurumsal organizasyonların bilgi işlem süreçlerini (arıza takibi, donanım 
 Uygulamanın çalışan sürümünü (Deploy) aşağıdaki bağlantıdan test edebilirsiniz:
 
 - 🌐 **Canlı Uygulama:** [bilgiislempaneli.runasp.net](http://bilgiislempaneli.runasp.net)
-- 👤 **Test Kullanıcısı:** `Teknik`
-- 🔑 **Test Şifresi:** `2026*`
 
 ## ⚙️ Mimari ve Teknolojiler (Tech Stack)
 Proje, sürdürülebilirlik ve modern standartlar gözetilerek geliştirilmiştir.
