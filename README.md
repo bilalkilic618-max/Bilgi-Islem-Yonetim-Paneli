@@ -1,5 +1,5 @@
-"Bu otomasyon, Bilgi İşlem teknik ekibinin günlük iş yükünü hafifletmek ve envanter süreçlerini hızlandırmak amacıyla, doğrudan ekibin ihtiyaçları doğrultusunda bir takım içi araç (internal tool) olarak geliştirilmiştir."
 # 🏢 Kurumsal IT Yönetim ve Arıza Takip Otomasyonu (IT Management System)
+"Bu otomasyon, Bilgi İşlem teknik ekibinin günlük iş yükünü hafifletmek ve envanter süreçlerini hızlandırmak amacıyla, doğrudan ekibin ihtiyaçları doğrultusunda bir takım içi araç (internal tool) olarak geliştirilmiştir."
 <img width="1870" height="974" alt="image" src="https://github.com/user-attachments/assets/b96f6a21-c49f-4f0b-9c2c-8ac6a56ee697" />
 
 
