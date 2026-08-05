@@ -1,0 +1,190 @@
+﻿@model IEnumerable<Yönetim_Paneli.Models.Envanter>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr" class="light-style layout-menu-fixed" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>Donanım Envanteri - Depo Yönetimi</title>
+
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/core.css" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+            body {
+                background-color: #0f172a !important;
+                color: #f8fafc !important;
+            }
+
+            .card {
+                background-color: #1e293b !important;
+                border: 1px solid #334155 !important;
+                border-radius: 10px;
+            }
+
+            .table-dark {
+                --bs-table-bg: #1e293b;
+                --bs-table-striped-bg: #111827;
+                color: #f8fafc;
+            }
+
+            .env-img {
+                width: 50px;
+                height: 50px;
+                object-fit: cover;
+                border-radius: 8px;
+                border: 1px solid #334155;
+            }
+    </style>
+
+    <!-- Helpers & Config -->
+    <script src="~/assets/vendor/js/helpers.js"></script>
+    <script src="~/assets/js/config.js"></script>
+</head>
+<body class="tech-body">
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+
+            <!-- SOL MENÜ -->
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo mt-3 mb-3 d-flex justify-content-between align-items-center">
+                    <a href="/Home/Index" class="app-brand-link">
+                        <span class="app-brand-text demo menu-text fw-bolder ms-2 text-white">Bilgi İşlem</span>
+                    </a>
+                    <!-- Mobilde menüyü kapatma butonu -->
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                        <i class="bx bx-chevron-left bx-sm align-middle text-white"></i>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item">
+                        <a href="/Home/Index" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                            <div>Ana Panel (Arızalar)</div>
+                        </a>
+                    </li>
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">SİSTEM YÖNETİMİ</span></li>
+                    <li class="menu-item">
+                        <a href="/Home/DepoYonetimi" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-package text-primary"></i>
+                            <div>Depo Yönetimi 🔐</div>
+                        </a>
+                    </li>
+                    <li class="menu-item active">
+                        <a href="/Home/EnvanterListesi" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-devices"></i>
+                            <div>Donanım Envanteri</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="/Home/PersonelListesi" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-user-check"></i>
+                            <div>Teknik Personeller</div>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- SAĞ İÇERİK ALANI -->
+            <div class="layout-page">
+
+                <!-- MOBİL TOPBAR (HAMBURGER MENÜ BUTONU) -->
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme d-xl-none" id="layout-navbar">
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm text-white"></i>
+                        </a>
+                    </div>
+                    <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+                        <span class="fw-bold fs-5 text-white">Donanım Envanteri</span>
+                    </div>
+                </nav>
+
+                <div class="content-wrapper">
+                    <div class="container-fluid flex-grow-1 container-p-y p-3 p-sm-4">
+
+                        <!-- MOBİL UYUM: Header esnek (flex-column flex-sm-row) yapıldı -->
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+                            <div>
+                                <h3 class="text-white mb-0 fs-4 fs-sm-3">Sistem Donanım Envanteri 🖥️</h3>
+                                <small class="text-muted">Depodaki ve Kullanımdaki Tüm Donanım Bileşenleri</small>
+                            </div>
+                            <!-- Buton mobilde full genişlik (w-100), PC'de otomatik -->
+                            <a href="/Home/EnvanterEkle" class="btn btn-primary w-100 w-sm-auto"><i class="bx bx-plus me-1"></i>+ Yeni Malzeme Ekle</a>
+                        </div>
+
+                        <div class="card">
+                            <div class="table-responsive text-nowrap">
+                                <table class="table table-dark table-hover mb-0 align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 70px;">GÖRSEL</th>
+                                            <th>MALZEME ADI</th>
+                                            <th>MARKA / MODEL</th>
+                                            <th>STOK ADETİ</th>
+                                            <th>AÇIKLAMA / KONUM</th>
+                                            <th style="width: 150px; text-align: center;">İŞLEM</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model != null && Model.Any())
+                                        {
+                                            foreach (var item in Model)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(item.FotografYolu))
+                                                        {
+                                                            <img src="~/img/envanter/@item.FotografYolu" class="env-img" alt="Donanım Görseli" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <img src="~/img/envanter/varsayilan.png" class="env-img" alt="Varsayılan" />
+                                                        }
+                                                    </td>
+                                                    <td class="fw-bold text-white">@item.MalzemeAdi</td>
+                                                    <td>@item.MarkaModel</td>
+                                                    <td><span class="badge bg-info px-3 py-2">@item.Adet ADET</span></td>
+                                                    <td><small class="text-light">@item.Aciklama</small></td>
+                                                    <td class="text-center">
+                                                        <div class="d-flex justify-content-center gap-1">
+                                                            <a href="/Home/EnvanterDuzenle/@item.Id" class="btn btn-sm btn-outline-warning">Düzenle</a>
+                                                            <a href="/Home/EnvanterSil/@item.Id" onclick="return confirm('Bu envanteri silmek istediğinize emin misiniz?')" class="btn btn-sm btn-outline-danger">Sil</a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted py-4">Sistemde henüz kayıtlı bir donanım malzemesi bulunmuyor.</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Mobilde Menü Arka Plan Karartması -->
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Gerekli JS Dosyaları -->
+    <script src="~/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="~/assets/vendor/libs/popper/popper.js"></script>
+    <script src="~/assets/vendor/js/bootstrap.js"></script>
+    <script src="~/assets/vendor/js/menu.js"></script>
+    <script src="~/assets/js/main.js"></script>
+</body>
+</html>

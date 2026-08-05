@@ -1,0 +1,570 @@
+﻿@model IEnumerable<Yönetim_Paneli.Models.DepoHareket>
+@{
+    Layout = null;
+    bool sifreGerekli = ViewBag.SifreGerekli ?? false;
+    string aktifSekme = ViewBag.AktifSekme ?? "hareketler";
+    var envanterler = ViewBag.Envanterler as List<Yönetim_Paneli.Models.Envanter> ?? new List<Yönetim_Paneli.Models.Envanter>();
+    int kritikStokSayisi = ViewBag.KritikStokSayisi ?? 0;
+}
+<!DOCTYPE html>
+<html lang="tr" class="dark-style layout-menu-fixed">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>Bilgi İşlem Depo & Envanter Portalı</title>
+
+    <link rel="stylesheet" href="~/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+
+    <style>
+            html, body {
+                background-color: #090d16 !important;
+                color: #e2e8f0 !important;
+                font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+                min-height: 100vh;
+                margin: 0;
+                padding: 0;
+            }
+
+            .portal-wrapper {
+                width: 100% !important;
+                padding: 1rem !important;
+            }
+
+            @@media (min-width: 768px) {
+                .portal-wrapper {
+                    padding: 2rem !important;
+                }
+            }
+
+            .card {
+                background-color: #111827 !important;
+                border: 1px solid #1f2937 !important;
+                border-radius: 12px !important;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+            }
+
+            .form-control, .form-select {
+                background-color: #090d16 !important;
+                border: 1px solid #1f2937 !important;
+                color: #ffffff !important;
+                border-radius: 8px !important;
+            }
+
+                .form-control:focus, .form-select:focus {
+                    background-color: #090d16 !important;
+                    border-color: #3b82f6 !important;
+                    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+                    color: #ffffff !important;
+                }
+
+            .nav-tabs-custom {
+                border-bottom: 2px solid #1f2937;
+                gap: 6px;
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 5px;
+            }
+
+                .nav-tabs-custom::-webkit-scrollbar {
+                    height: 4px;
+                }
+
+                .nav-tabs-custom::-webkit-scrollbar-thumb {
+                    background: #1f2937;
+                    border-radius: 4px;
+                }
+
+                .nav-tabs-custom .nav-link {
+                    color: #94a3b8;
+                    border: none;
+                    font-weight: 600;
+                    padding: 10px 18px;
+                    border-radius: 10px 10px 0 0;
+                    transition: all 0.2s ease;
+                    background-color: #111827;
+                    font-size: 0.85rem;
+                }
+
+            @@media (min-width: 768px) {
+                .nav-tabs-custom .nav-link {
+                    padding: 14px 28px;
+                    font-size: 1rem;
+                }
+            }
+
+            .nav-tabs-custom .nav-link:hover {
+                color: #3b82f6;
+                background-color: #1f2937;
+            }
+
+            .nav-tabs-custom .nav-link.active {
+                background-color: #3b82f6 !important;
+                color: #ffffff !important;
+                box-shadow: 0 -4px 12px rgba(59, 130, 246, 0.3);
+            }
+
+            .table-dark-custom {
+                width: 100%;
+                color: #e2e8f0;
+                border-collapse: collapse;
+            }
+
+                .table-dark-custom th {
+                    background-color: #1f2937 !important;
+                    color: #94a3b8;
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    padding: 12px 16px;
+                    border: none;
+                }
+
+                .table-dark-custom td {
+                    padding: 12px 16px;
+                    border-bottom: 1px solid #1f2937;
+                    vertical-align: middle;
+                }
+
+                .table-dark-custom tbody tr:hover {
+                    background-color: #1a2332 !important;
+                }
+
+            .env-image-box {
+                width: 48px;
+                height: 48px;
+                object-fit: cover;
+                border-radius: 8px;
+                border: 2px solid #374151;
+                background-color: #090d16;
+            }
+
+            .barcode-text {
+                font-family: monospace;
+                color: #fbbf24;
+                letter-spacing: 1px;
+            }
+
+            @@media print {
+                .no-print {
+                    display: none !important;
+                }
+
+                body {
+                    background-color: #fff !important;
+                    color: #000 !important;
+                }
+
+                .card {
+                    border: none !important;
+                    box-shadow: none !important;
+                }
+
+                .table-dark-custom {
+                    color: #000 !important;
+                }
+
+                    .table-dark-custom th {
+                        background-color: #f1f5f9 !important;
+                        color: #000 !important;
+                    }
+
+                    .table-dark-custom td {
+                        border-bottom: 1px solid #ddd !important;
+                    }
+            }
+    </style>
+</head>
+<body>
+
+    @if (sifreGerekli)
+    {
+        <!-- 🔐 DEPO ŞİFRE EKRANI MOBİL UYUMLU -->
+        <div class="d-flex align-items-center justify-content-center vh-100 px-3">
+            <div class="card p-4 p-sm-5 text-center" style="max-width: 420px; width:100%;">
+                <div class="avatar avatar-xl mx-auto mb-3 p-3 rounded-circle d-flex align-items-center justify-content-center" style="width:70px; height:70px; background-color: rgba(59, 130, 246, 0.15);">
+                    <i class="bx bx-shield-quarter fs-1 text-primary"></i>
+                </div>
+                <h4 class="text-white fw-bold mb-1 fs-5 fs-sm-4">Depo Portalı Kilitli</h4>
+                <p class="text-muted small mb-4">Bu alana erişmek için Depo Yetkili Şifrenizi giriniz.</p>
+
+                @if (TempData["HataMesaji"] != null)
+                {
+                    <div class="alert alert-danger p-2 small mb-3">@TempData["HataMesaji"]</div>
+                }
+
+                <form action="/Home/DepoGirisYap" method="POST">
+                    <input type="password" name="depoSifresi" class="form-control text-center fs-4 mb-3" placeholder="••••••••" required autofocus />
+                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-2 fs-6">Sisteme Giriş Yap</button>
+                    <a href="/Home/Index" class="btn btn-link text-muted btn-sm text-decoration-none">Ana Panele Dön</a>
+                </form>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- 📦 DEPO ANA PORTALI (TAM EKRAN & MOBİL UYUMLU) -->
+        <div class="portal-wrapper">
+
+            <!-- Üst Başlık Barı -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 no-print">
+                <div>
+                    <h2 class="text-white fw-bold mb-1 fs-4 fs-md-2"><i class="bx bx-package text-primary me-2"></i>Bilgi İşlem Depo & Stok Mimarisi</h2>
+                    <p class="text-muted mb-0 small">Stok Giriş/Çıkış Hareketleri, Donanım Envanter Yönetimi ve Dönemsel Raporlama</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2 w-100 w-md-auto">
+                    <a href="/Home/VeritabaniYedekAl" class="btn btn-sm btn-warning fw-bold flex-grow-1 flex-md-grow-0"><i class="bx bx-download me-1"></i>Yedek Al</a>
+                    <a href="/Home/Index" class="btn btn-sm btn-outline-light flex-grow-1 flex-md-grow-0"><i class="bx bx-home me-1"></i>Ana Panel</a>
+                    <a href="/Home/DepoCikisYap" class="btn btn-sm btn-outline-danger flex-grow-1 flex-md-grow-0"><i class="bx bx-power-off me-1"></i>Kapat</a>
+                </div>
+            </div>
+
+            <!-- 🗂️ SEKMELER (MOBİLDE SAĞA/SOLA KAYDIRILABİLİR) -->
+            <ul class="nav nav-tabs-custom mb-4 no-print">
+                <li class="nav-item">
+                    <a class="nav-link @(aktifSekme == "hareketler" ? "active" : "")" href="/Home/DepoYonetimi?sekme=hareketler">
+                        <i class="bx bx-transfer-alt me-1 me-sm-2 fs-5"></i>Stok Hareketleri
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(aktifSekme == "envanter" ? "active" : "")" href="/Home/DepoYonetimi?sekme=envanter">
+                        <i class="bx bx-devices me-1 me-sm-2 fs-5"></i>Donanım Envanteri
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(aktifSekme == "raporlar" ? "active" : "")" href="/Home/DepoYonetimi?sekme=raporlar">
+                        <i class="bx bx-bar-chart-alt-2 me-1 me-sm-2 fs-5"></i>Raporlama
+                    </a>
+                </li>
+            </ul>
+
+            <!-- ============================================================= -->
+            @if (aktifSekme == "hareketler")
+            {
+                <!-- 1. SEKME: STOK GİRİŞ / ÇIKIŞ HAREKETLERİ -->
+                <div class="row g-3 mb-4 no-print">
+                    <div class="col-6 col-md-3">
+                        <div class="card p-3 p-md-4 h-100">
+                            <span class="text-muted text-uppercase small fw-bold mb-1" style="font-size:0.7rem;">TOPLAM GİRİŞ</span>
+                            <h3 class="text-success fw-bold mb-0">+@(ViewBag.ToplamGiris) <span class="fs-6 text-muted">Adet</span></h3>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card p-3 p-md-4 h-100">
+                            <span class="text-muted text-uppercase small fw-bold mb-1" style="font-size:0.7rem;">MÜDÜRLÜKLERE VERİLEN</span>
+                            <h3 class="text-warning fw-bold mb-0">-@(ViewBag.ToplamCikis) <span class="fs-6 text-muted">Adet</span></h3>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card p-3 p-md-4 h-100">
+                            <span class="text-muted text-uppercase small fw-bold mb-1" style="font-size:0.7rem;">ELDE KALAN STOK</span>
+                            <h3 class="text-info fw-bold mb-0">@(ViewBag.KalanStok) <span class="fs-6 text-muted">Adet</span></h3>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card p-3 p-md-4 h-100" style="border-color: rgba(239, 68, 68, 0.4) !important;">
+                            <span class="text-danger text-uppercase small fw-bold mb-1" style="font-size:0.7rem;"><i class="bx bx-error me-1"></i>KRİTİK STOK</span>
+                            <h3 class="text-danger fw-bold mb-0">@kritikStokSayisi <span class="fs-6 text-muted">Ürün</span></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4 no-print">
+                    <div class="card-header border-bottom border-secondary py-3 px-3 px-sm-4">
+                        <h5 class="text-white mb-0 fw-bold fs-6"><i class="bx bx-plus-circle me-2 text-primary"></i>Yeni Stok Hareketi Veya Cihaz Değişimi İşle</h5>
+                    </div>
+                    <div class="card-body mt-3 px-3 px-sm-4">
+                        <form action="/Home/DepoHareketEkle" method="POST">
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6 col-md-2">
+                                    <label class="form-label small text-muted">İşlem Türü</label>
+                                    <select name="IslemTuru" class="form-select" required>
+                                        <option value="ÇIKIŞ">Müdürlüğe Verildi (Çıkış)</option>
+                                        <option value="GİRİŞ">Depoya Geldi (Giriş)</option>
+                                        <option value="DEĞİŞİM">Cihaz Değişimi Yapıldı</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-md-2">
+                                    <label class="form-label small text-info fw-bold"><i class="bx bx-barcode-reader me-1"></i>Barkod / Seri No</label>
+                                    <input type="text" name="BarkodNo" id="DepoBarkodNo" class="form-control border-info" placeholder="Barkod okut..." autofocus autocomplete="off" />
+                                </div>
+                                <div class="col-12 col-sm-6 col-md-2">
+                                    <label class="form-label small text-muted">Malzeme Adı</label>
+                                    <input type="text" name="MalzemeAdi" id="DepoMalzemeAdi" class="form-control" placeholder="Örn: HP Yazıcı" required />
+                                </div>
+                                <div class="col-6 col-sm-6 col-md-1">
+                                    <label class="form-label small text-muted">Adet</label>
+                                    <input type="number" name="Adet" value="1" min="1" class="form-control" required />
+                                </div>
+                                <div class="col-6 col-sm-6 col-md-2">
+                                    <label class="form-label small text-muted">İlgili Birim</label>
+                                    <input type="text" name="Mudurluk" class="form-control" placeholder="Örn: Zabıta" required />
+                                </div>
+                                <div class="col-12 col-sm-6 col-md-3">
+                                    <label class="form-label small text-muted">Teslim Alan/Eden Personel</label>
+                                    <input type="text" name="PersonelAdSoyad" class="form-control" placeholder="Ad Soyad" required />
+                                </div>
+                                <div class="col-12 col-md-10">
+                                    <label class="form-label small text-muted">Açıklama / Değişim Notu</label>
+                                    <input type="text" name="Aciklama" class="form-control" placeholder="Örn: Arızalı tarayıcı depoya alındı, yeni cihaz teslim edildi." />
+                                </div>
+                                <div class="col-12 col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100"><i class="bx bx-check me-1"></i>Kaydet</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header border-bottom border-secondary d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 py-3 px-3 px-sm-4">
+                        <h5 class="text-white mb-0 fw-bold fs-6">Son Depo Hareket Geçmişi</h5>
+                        <div class="d-flex gap-2 w-100 w-sm-auto">
+                            <a href="/Home/DepoExcelAktar" class="btn btn-sm btn-success no-print flex-grow-1 flex-sm-grow-0"><i class="bx bx-file me-1"></i>Excel (.csv)</a>
+                            <button onclick="window.print()" class="btn btn-sm btn-outline-info no-print flex-grow-1 flex-sm-grow-0"><i class="bx bx-printer me-1"></i>Yazdır / PDF</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table-dark-custom">
+                            <thead>
+                                <tr>
+                                    <th>TARİH / SAAT</th>
+                                    <th>İŞLEM TÜRÜ</th>
+                                    <th>BARKOD NO</th>
+                                    <th>MALZEME ADI</th>
+                                    <th>ADET</th>
+                                    <th>MÜDÜRLÜK</th>
+                                    <th>PERSONEL</th>
+                                    <th>AÇIKLAMA / NOT</th>
+                                    <th class="text-center no-print">TUTANAK</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Any())
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td><small class="text-muted">@item.Tarih.ToString("dd.MM.yyyy HH:mm")</small></td>
+                                            <td><span class="badge @(item.IslemTuru == "GİRİŞ" ? "bg-success" : item.IslemTuru == "DEĞİŞİM" ? "bg-info" : "bg-warning text-dark")">@item.IslemTuru</span></td>
+                                            <td class="barcode-text">@(string.IsNullOrEmpty(item.BarkodNo) ? "-" : item.BarkodNo)</td>
+                                            <td class="fw-bold text-white">@item.MalzemeAdi</td>
+                                            <td><span class="badge bg-primary px-3">@item.Adet</span></td>
+                                            <td><span class="text-info fw-bold">@item.Mudurluk</span></td>
+                                            <td>@item.PersonelAdSoyad</td>
+                                            <td><small class="text-muted">@item.Aciklama</small></td>
+                                            <td class="text-center no-print">
+                                                <!-- HER İŞLEMDE TUTANAK BUTONU ÇIKAR -->
+                                                <a href="/Home/TutanakYazdir/@item.Id" target="_blank" class="btn btn-sm btn-outline-info" title="Tutanak Yazdır">
+                                                    <i class="bx bx-printer"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="9" class="text-center text-muted py-4">Henüz kayıtlı bir depo hareketi bulunmuyor.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else if (aktifSekme == "envanter")
+            {
+                <!-- 2. SEKME: DONANIM ENVANTERİ -->
+                <div class="card">
+                    <div class="card-header border-bottom border-secondary d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 py-3 px-3 px-sm-4">
+                        <div>
+                            <h5 class="text-white mb-0 fw-bold fs-6"><i class="bx bx-devices me-2 text-info"></i>Sistem Donanım Envanteri</h5>
+                            <small class="text-muted">Depodaki Ve Kullanımdaki Tüm Fiziksel Donanım Bileşenleri</small>
+                        </div>
+                        <a href="/Home/EnvanterEkle" class="btn btn-primary btn-sm no-print w-100 w-sm-auto"><i class="bx bx-plus me-1"></i>Yeni Donanım Ekle</a>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table-dark-custom">
+                            <thead>
+                                <tr>
+                                    <th style="width: 70px;">GÖRSEL</th>
+                                    <th>BARKOD NO</th>
+                                    <th>MALZEME ADI</th>
+                                    <th>MARKA / MODEL</th>
+                                    <th>STOK ADEDİ</th>
+                                    <th>AÇIKLAMA / KONUM</th>
+                                    <th class="no-print" style="width: 150px; text-align: center;">İŞLEMLER</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (envanterler != null && envanterler.Any())
+                                {
+                                    foreach (var env in envanterler)
+                                    {
+                                        bool kritikMi = env.Adet <= 2;
+                                        <tr style="@(kritikMi ? "background-color: rgba(239, 68, 68, 0.08) !important;" : "")">
+                                            <td>
+                                                <img src="~/img/envanter/@(string.IsNullOrEmpty(env.FotografYolu) ? "varsayilan.png" : env.FotografYolu)" class="env-image-box" alt="Görsel" />
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-label-warning text-warning fs-6" style="font-family: monospace; letter-spacing:1px;">
+                                                    <i class="bx bx-barcode me-1"></i>@(string.IsNullOrEmpty(env.BarkodNo) ? "YOK" : env.BarkodNo)
+                                                </span>
+                                            </td>
+                                            <td class="fw-bold text-white fs-6">
+                                                @env.MalzemeAdi
+                                                @if (kritikMi)
+                                                {
+                                                    <span class="badge bg-danger ms-2"><i class="bx bx-error-circle me-1"></i>Kritik</span>
+                                                }
+                                            </td>
+                                            <td><span class="text-light">@env.MarkaModel</span></td>
+                                            <td><span class="badge @(kritikMi ? "bg-danger" : "bg-info") fs-6 px-3 py-2">@env.Adet Adet</span></td>
+                                            <td><small class="text-muted">@env.Aciklama</small></td>
+                                            <td class="text-center no-print">
+                                                <a href="/Home/EnvanterDuzenle/@env.Id" class="btn btn-sm btn-warning fw-bold px-2 me-1">
+                                                    <i class="bx bx-edit-alt"></i>
+                                                </a>
+                                                <a href="/Home/EnvanterSil/@env.Id" onclick="return confirm('Bu envanteri silmek istediğinize emin misiniz?')" class="btn btn-sm btn-danger px-2">
+                                                    <i class="bx bx-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="7" class="text-center text-muted py-5">Depoda kayıtlı donanım bileşeni bulunamadı.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else if (aktifSekme == "raporlar")
+            {
+                <!-- 3. SEKME: AYLIK & YILLIK DEPO RAPORLARI -->
+                <div class="card mb-4 no-print">
+                    <div class="card-header border-bottom border-secondary py-3 px-3 px-sm-4">
+                        <h5 class="text-white mb-0 fw-bold fs-6"><i class="bx bx-filter-alt me-2 text-primary"></i>Aylık & Yıllık Depo Rapor Filtresi</h5>
+                    </div>
+                    <div class="card-body mt-3 px-3 px-sm-4">
+                        <form action="/Home/DepoYonetimi" method="GET">
+                            <input type="hidden" name="sekme" value="raporlar" />
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6 col-md-3">
+                                    <label class="form-label small text-muted">Yıl Seçin</label>
+                                    <select name="yil" class="form-select">
+                                        <option value="2026" selected>2026 Yılı</option>
+                                        <option value="2025">2025 Yılı</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-md-3">
+                                    <label class="form-label small text-muted">Ay Seçin (Aylık Rapor İçin)</label>
+                                    <select name="ay" class="form-select">
+                                        <option value="0">--- Tüm Yıl (Yıllık Rapor) ---</option>
+                                        <option value="1">Ocak</option>
+                                        <option value="2">Şubat</option>
+                                        <option value="3">Mart</option>
+                                        <option value="4">Nisan</option>
+                                        <option value="5">Mayıs</option>
+                                        <option value="6">Haziran</option>
+                                        <option value="7">Temmuz</option>
+                                        <option value="8">Ağustos</option>
+                                        <option value="9">Eylül</option>
+                                        <option value="10">Ekim</option>
+                                        <option value="11">Kasım</option>
+                                        <option value="12">Aralık</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-md-4">
+                                    <label class="form-label small text-muted">Müdürlük Filtresi</label>
+                                    <input type="text" name="mudurluk" value="@ViewBag.SecilenMudurluk" class="form-control" placeholder="Örn: Zabıta Müdürlüğü" />
+                                </div>
+                                <div class="col-12 col-sm-6 col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100 py-2"><i class="bx bx-search me-1"></i>Raporu Getir</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header border-bottom border-secondary d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 py-3 px-3 px-sm-4">
+                        <div>
+                            <h5 class="text-white mb-0 fw-bold fs-6">📑 @(ViewBag.SecilenAy > 0 ? ViewBag.SecilenAy + ". Ay" : "Tüm Yıl") Depo Rapor Çıktısı</h5>
+                            <small class="text-muted">Filtrelenen Dönem: @(ViewBag.SecilenYil) @(ViewBag.SecilenAy > 0 ? " / Ay: " + ViewBag.SecilenAy : "")</small>
+                        </div>
+                        <div class="d-flex gap-2 w-100 w-sm-auto">
+                            <a href="/Home/DepoExcelAktar" class="btn btn-sm btn-success no-print flex-grow-1 flex-sm-grow-0"><i class="bx bx-file me-1"></i>Excel (.csv)</a>
+                            <button onclick="window.print()" class="btn btn-sm btn-outline-info no-print flex-grow-1 flex-sm-grow-0"><i class="bx bx-printer me-1"></i>Yazdır / PDF</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table-dark-custom">
+                            <thead>
+                                <tr>
+                                    <th>İŞLEM TARİHİ</th>
+                                    <th>İŞLEM TÜRÜ</th>
+                                    <th>BARKOD NO</th>
+                                    <th>MALZEME ADI</th>
+                                    <th>ADET</th>
+                                    <th>MÜDÜRLÜK</th>
+                                    <th>PERSONEL</th>
+                                    <th>AÇIKLAMA / NOT</th>
+                                    <th class="text-center no-print">TUTANAK</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Any())
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>@item.Tarih.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td><span class="badge @(item.IslemTuru == "GİRİŞ" ? "bg-success" : item.IslemTuru == "DEĞİŞİM" ? "bg-info" : "bg-warning text-dark")">@item.IslemTuru</span></td>
+                                            <td class="barcode-text">@(string.IsNullOrEmpty(item.BarkodNo) ? "-" : item.BarkodNo)</td>
+                                            <td class="fw-bold text-white">@item.MalzemeAdi</td>
+                                            <td>@item.Adet</td>
+                                            <td class="text-info fw-bold">@item.Mudurluk</td>
+                                            <td>@item.PersonelAdSoyad</td>
+                                            <td><small class="text-muted">@item.Aciklama</small></td>
+                                            <td class="text-center no-print">
+                                                <!-- HER İŞLEMDE TUTANAK BUTONU ÇIKAR -->
+                                                <a href="/Home/TutanakYazdir/@item.Id" target="_blank" class="btn btn-sm btn-outline-info" title="Tutanak Yazdır">
+                                                    <i class="bx bx-printer"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="9" class="text-center text-muted py-4">Seçilen dönem için kayıtlı bir depo hareketi bulunmadı.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- 🌟 BARKOD OKUYUCU KLAVYE KONTROL SCRİPTİ -->
+    <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var barkodInput = document.getElementById('DepoBarkodNo');
+                if (barkodInput) {
+                    barkodInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' || e.keyCode === 13) {
+                            e.preventDefault();
+                            document.getElementById('DepoMalzemeAdi').focus();
+                        }
+                    });
+                }
+            });
+    </script>
+</body>
+</html>

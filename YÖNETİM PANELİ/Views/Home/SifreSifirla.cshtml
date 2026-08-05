@@ -1,0 +1,70 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yeni Şifre Belirle - Bilgi İşlem Destek Sistemi</title>
+    <link rel="stylesheet" href="~/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+    <style>
+            body {
+                background-color: #0f172a !important;
+                background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 40%);
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+            }
+
+            .reset-card {
+                background: #1e293b !important;
+                border: 1px solid #334155 !important;
+                border-radius: 12px;
+                padding: 2.5rem;
+                width: 100%;
+                max-width: 420px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            }
+
+            .form-control {
+                background-color: #0f172a !important;
+                border: 1px solid #334155 !important;
+                color: #f8fafc !important;
+            }
+
+            .form-label {
+                color: #cbd5e1 !important;
+            }
+    </style>
+</head>
+<body>
+    <div class="reset-card">
+        <div class="text-center mb-4">
+            <h3 class="mb-2" style="color: #ffffff;">bilaltech</h3>
+            <p class="mb-2" style="color: #94a3b8;">Yeni Şifre Belirleme 🔑</p>
+            <small style="color: #64748b;">Hesabınız için lütfen yeni bir şifre girin.</small>
+        </div>
+
+        <form action="/Home/SifreSifirla" method="POST" autocomplete="off">
+            <!-- Arka planda token bilgisini taşımak için gizli input -->
+            <input type="hidden" name="token" value="@ViewBag.Token" />
+
+            <div class="mb-3 mt-3">
+                <label for="yeniSifre" class="form-label text-uppercase">Yeni Şifre</label>
+                <input type="password" class="form-control" id="yeniSifre" name="yeniSifre" placeholder="••••••••••••" required autocomplete="new-password" />
+            </div>
+
+            <button class="btn btn-primary d-grid w-100 mb-3" type="submit" style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important; border: none !important;">Şifreyi Güncelle ve Giriş Yap</button>
+
+            <div class="text-center">
+                <a href="/Home/Login" style="color: #60a5fa; text-decoration: none; font-size: 0.9rem;"><i class="bx bx-chevron-left"></i> Giriş Ekranına Dön</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

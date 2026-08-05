@@ -1,0 +1,218 @@
+﻿@model Yönetim_Paneli.Models.DepoHareket
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>Malzeme Teslim Tutanağı - @Model.BarkodNo</title>
+    <style>
+            body {
+                font-family: 'Times New Roman', Times, serif;
+                background-color: #525659;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+            }
+
+            .a4-paper {
+                background-color: #fff;
+                width: 210mm;
+                min-height: 297mm;
+                padding: 20mm;
+                box-sizing: border-box;
+                box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                position: relative;
+            }
+
+            .header {
+                text-align: center;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+                margin-bottom: 30px;
+            }
+
+                .header h2 {
+                    margin: 0;
+                    font-size: 24px;
+                    text-transform: uppercase;
+                }
+
+                .header h3 {
+                    margin: 5px 0 0 0;
+                    font-size: 18px;
+                    color: #555;
+                }
+
+            .content {
+                font-size: 16px;
+                line-height: 1.6;
+            }
+
+            .info-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                margin-bottom: 30px;
+            }
+
+                .info-table th, .info-table td {
+                    border: 1px solid #000;
+                    padding: 10px;
+                    text-align: left;
+                }
+
+                .info-table th {
+                    background-color: #f2f2f2;
+                    width: 35%;
+                }
+
+            .signature-section {
+                margin-top: 60px;
+                width: 100%;
+                display: table;
+            }
+
+            .signature-box {
+                display: table-cell;
+                width: 50%;
+                text-align: center;
+            }
+
+                .signature-box p {
+                    margin: 5px 0;
+                    font-weight: bold;
+                }
+
+            .signature-line {
+                margin-top: 50px;
+                width: 80%;
+                border-bottom: 1px solid #000;
+                display: inline-block;
+            }
+
+            .footer-note {
+                position: absolute;
+                bottom: 20mm;
+                left: 20mm;
+                right: 20mm;
+                text-align: center;
+                font-size: 12px;
+                color: #777;
+                border-top: 1px solid #ddd;
+                padding-top: 10px;
+            }
+
+            /* Butonlar yazdırırken gözükmesin diye gizliyoruz */
+            .print-btn-wrapper {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+            }
+
+            .print-btn {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+
+            @@media print {
+                body {
+                    background-color: #fff;
+                    padding: 0;
+                }
+
+                .a4-paper {
+                    box-shadow: none;
+                    width: 100%;
+                    min-height: auto;
+                    padding: 0;
+                }
+
+                .print-btn-wrapper {
+                    display: none;
+                }
+            }
+    </style>
+</head>
+<body>
+
+    <div class="print-btn-wrapper">
+        <button class="print-btn" onclick="window.print()">Yazdır / PDF Olarak Kaydet</button>
+        <button class="print-btn" style="background-color: #6c757d; margin-left: 10px;" onclick="window.close()">Kapat</button>
+    </div>
+
+    <div class="a4-paper">
+        <div class="header">
+            <h2>BİLGİ İŞLEM MÜDÜRLÜĞÜ</h2>
+            <h3>Donanım / Malzeme Teslim Tutanağı</h3>
+        </div>
+
+        <div class="content">
+            <p>
+                Aşağıda cinsi, markası ve donanım özellikleri belirtilen kurum demirbaşı / sarf malzemesi,
+                ilgili birim personeline çalışır durumda ve eksiksiz olarak teslim edilmiştir.
+            </p>
+
+            <table class="info-table">
+                <tr>
+                    <th>İşlem Tarihi</th>
+                    <td>@Model.Tarih.ToString("dd.MM.yyyy HH:mm")</td>
+                </tr>
+                <tr>
+                    <th>Cihaz Barkod / Seri No</th>
+                    <td><strong>@(string.IsNullOrEmpty(Model.BarkodNo) ? "Barkodsuz Ürün" : Model.BarkodNo)</strong></td>
+                </tr>
+                <tr>
+                    <th>Malzeme Adı / Cinsi</th>
+                    <td>@Model.MalzemeAdi</td>
+                </tr>
+                <tr>
+                    <th>Verilen Adet</th>
+                    <td>@Model.Adet Adet</td>
+                </tr>
+                <tr>
+                    <th>Teslim Edilen Birim</th>
+                    <td>@Model.Mudurluk</td>
+                </tr>
+                <tr>
+                    <th>Açıklama / Durum</th>
+                    <td>@Model.Aciklama</td>
+                </tr>
+            </table>
+
+            <p>
+                <em>
+                    İşbu tutanak, taraflarca okunarak .../.../202.. tarihinde imza altına alınmıştır.
+                    Teslim alan personel, cihazın zimmetini ve kullanım sorumluluğunu kabul eder.
+                </em>
+            </p>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <p>Teslim Eden (Bilgi İşlem)</p>
+                <span class="signature-line"></span>
+                <p>Ad Soyad / İmza</p>
+            </div>
+            <div class="signature-box">
+                <p>Teslim Alan Personel</p>
+                <span class="signature-line"></span>
+                <p>@Model.PersonelAdSoyad</p>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            Bu belge Bilgi İşlem Depo Otomasyonu tarafından otomatik olarak oluşturulmuştur. Kayıt ID: @Model.Id
+        </div>
+    </div>
+
+</body>
+</html>

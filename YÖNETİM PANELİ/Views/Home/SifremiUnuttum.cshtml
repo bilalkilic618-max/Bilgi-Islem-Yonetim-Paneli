@@ -1,0 +1,81 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Şifremi Unuttum - Bilgi İşlem Destek Sistemi</title>
+    <link rel="stylesheet" href="~/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+    <style>
+            body {
+                background-color: #0f172a !important;
+                background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 40%);
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+            }
+
+            .forgot-card {
+                background: #1e293b !important;
+                border: 1px solid #334155 !important;
+                border-radius: 12px;
+                padding: 2.5rem;
+                width: 100%;
+                max-width: 440px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            }
+
+            .form-control {
+                background-color: #0f172a !important;
+                border: 1px solid #334155 !important;
+                color: #f8fafc !important;
+            }
+
+            .form-label {
+                color: #cbd5e1 !important;
+            }
+    </style>
+</head>
+<body>
+    <div class="forgot-card">
+        <div class="text-center mb-4">
+            <h3 class="mb-2" style="color: #ffffff;">bilaltech</h3>
+            <p class="mb-2" style="color: #94a3b8;">Şifre Sıfırlama Portalı 🔑</p>
+            <small style="color: #64748b;">Sistemde kayıtlı e-posta adresinizi girin, size gerçek şifre sıfırlama bağlantısı gönderelim.</small>
+        </div>
+
+        @if (ViewBag.BasariMesaji != null)
+        {
+            <div class="alert alert-success mb-3" style="background-color: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #86efac; padding: 12px; font-size: 0.88rem; border-radius: 8px;">
+                <i class="bx bx-mail-send me-1"></i> @ViewBag.BasariMesaji
+            </div>
+        }
+
+        @if (ViewBag.HataMesaji != null)
+        {
+            <div class="alert alert-danger mb-3" style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 12px; font-size: 0.88rem; border-radius: 8px;">
+                <i class="bx bx-error-circle me-1"></i> @ViewBag.HataMesaji
+            </div>
+        }
+
+        <form action="/Home/SifremiUnuttum" method="POST" autocomplete="off">
+            <div class="mb-3 mt-3">
+                <label for="email" class="form-label text-uppercase">E-Posta Adresi</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="ornek@domain.com" required />
+            </div>
+
+            <button class="btn btn-primary d-grid w-100 mb-3" type="submit" style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important; border: none !important;">Sıfırlama Bağlantısı Gönder</button>
+
+            <div class="text-center">
+                <a href="/Home/Login" style="color: #60a5fa; text-decoration: none; font-size: 0.9rem;"><i class="bx bx-chevron-left"></i> Giriş Ekranına Dön</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

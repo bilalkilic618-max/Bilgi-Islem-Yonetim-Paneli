@@ -1,0 +1,219 @@
+/* --- GENEL ARKA PLAN VE YAZILAR --- */
+body, html, .layout-wrapper, .layout-container {
+    background-color: #0f172a !important; /* Koyu, teknolojik lacivert/füme */
+    color: #e2e8f0 !important; /* Parlak okunabilir yazılar */
+}
+
+/* --- SOL MENÜ (O iğrenç beyaz kısmı düzeltiyoruz) --- */
+.bg-menu-theme {
+    background-color: #1e293b !important; /* Kartlarla aynı renk yapıyoruz */
+    border-right: 1px solid #334155 !important;
+}
+    /* Menüdeki silik yazıları parlatıyoruz */
+    .bg-menu-theme .menu-link, .menu-header-text {
+        color: #cbd5e1 !important;
+        font-weight: 500;
+    }
+    /* Seçili olan menüyü kurumsal mavi yapıyoruz */
+    .bg-menu-theme .menu-item.active > .menu-link {
+        background-color: #3b82f6 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4) !important;
+    }
+
+.app-brand-text {
+    color: #ffffff !important;
+    font-size: 1.4rem;
+}
+
+/* --- ÜST BAR (Arama kısmı) --- */
+.bg-navbar-theme {
+    background-color: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    color: #ffffff !important;
+}
+/* Arama kutusunu teknolojik yapıyoruz */
+.navbar-nav .nav-item input.form-control {
+    background-color: #0f172a !important;
+    color: white !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+}
+
+    .navbar-nav .nav-item input.form-control::placeholder {
+        color: #64748b !important;
+    }
+
+.bx-search, .bx-menu {
+    color: #94a3b8 !important;
+}
+
+/* --- ORTADAKİ BİLGİ İŞLEM KARTLARI --- */
+.card {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+}
+
+    .card h1, .card h2, .card h3, .card h4, .card h5, .card h6, .card-title {
+        color: #f8fafc !important; /* Başlıklar bembeyaz */
+    }
+
+p, span, .text-muted, small {
+    color: #94a3b8 !important; /* Açıklama yazıları hafif gri (okunabilir) */
+}
+
+/* --- İKONLAR VE ROZETLER (Profesyonel renk tonları) --- */
+.bg-label-primary {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
+}
+
+.bg-label-success {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+}
+
+.bg-label-info {
+    background-color: rgba(6, 182, 212, 0.15) !important;
+    color: #22d3ee !important;
+}
+
+.btn-outline-primary {
+    border-color: #3b82f6 !important;
+    color: #60a5fa !important;
+}
+
+    .btn-outline-primary:hover {
+        background-color: #3b82f6 !important;
+        color: white !important;
+    }
+/* --- YAN MENÜ KARE BUTON TASARIMI --- */
+#layout-menu .menu-inner .menu-item {
+    margin: 0.6rem 1rem !important; /* Butonların etrafında nefes alma boşluğu */
+}
+
+    /* Normal Butonların Görünümü */
+    #layout-menu .menu-inner .menu-item:not(.menu-header) .menu-link {
+        background-color: #1e293b !important; /* Kartlarla uyumlu arka plan */
+        border: 1px solid #334155 !important;
+        border-radius: 0.5rem !important; /* Kare görünüm (hafif yumuşatılmış) */
+        padding: 0.8rem 1rem !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.2s ease-in-out !important;
+        display: flex;
+        align-items: center;
+    }
+
+        /* Fareyle Üzerine Gelince (Hover) Parlama Efekti */
+        #layout-menu .menu-inner .menu-item:not(.menu-header) .menu-link:hover {
+            background-color: #2c3e50 !important;
+            border-color: #3b82f6 !important; /* Mavi teknolojik çerçeve */
+            transform: translateY(-2px) !important; /* Yukarı kalkma hissi */
+            box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.3) !important;
+        }
+
+    /* Seçili (Aktif) Olan Ana Panel Butonu Bozulmasın Diye */
+    #layout-menu .menu-inner .menu-item.active .menu-link {
+        background-color: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4) !important;
+        transform: none !important;
+    }
+
+/* Buton İkonlarının Rengi */
+#layout-menu .menu-inner .menu-icon {
+    color: #60a5fa !important; /* İkonları parlak mavi yapıyoruz */
+    /* ==========================================================================
+   BİLGI İŞLEM SİBER TEKNOLOJİ TEMASI (ORTAK TASARIM SINIFLARI)
+   ========================================================================== */
+    /* Genel Sayfa ve Arka Plan Gradients */
+    .tech-body {
+        background: radial-gradient(circle at 50% 50%, #1a1b2f 0%, #0d0e15 100%) !important;
+        color: #a3a7c5 !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    /* Fütüristik Kart Yapısı */
+    .tech-card {
+        background: rgba(30, 32, 54, 0.75) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(105, 108, 255, 0.2) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .tech-card-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: transparent !important;
+        padding: 1.5rem !important;
+    }
+
+    .tech-title {
+        color: #ffffff !important;
+        text-shadow: 0 0 10px rgba(105, 108, 255, 0.5);
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    /* Siber Form Elemanları (Inputs) */
+    .tech-label {
+        color: #8c90b5 !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+
+    .tech-input {
+        background-color: rgba(13, 14, 21, 0.8) !important;
+        border: 1px solid rgba(105, 108, 255, 0.25) !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+
+        .tech-input:focus {
+            border-color: #696cff !important;
+            box-shadow: 0 0 15px rgba(105, 108, 255, 0.4) !important;
+            background-color: #0d0e15 !important;
+        }
+
+        .tech-input::placeholder {
+            color: #4e5277 !important;
+        }
+    /* Parlayan Neon Butonlar */
+    .btn-tech-primary {
+        background: linear-gradient(45deg, #696cff, #00f2fe) !important;
+        border: none !important;
+        color: #fff !important;
+        font-weight: 600;
+        border-radius: 8px !important;
+        padding: 10px 24px;
+        box-shadow: 0 0 15px rgba(105, 108, 255, 0.4);
+        transition: all 0.3s ease-in-out;
+    }
+
+        .btn-tech-primary:hover {
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.8);
+            transform: translateY(-2px);
+            color: #fff !important;
+        }
+
+    .btn-tech-secondary {
+        background: transparent !important;
+        border: 1px solid #4e5277 !important;
+        color: #a3a7c5 !important;
+        font-weight: 600;
+        border-radius: 8px !important;
+        padding: 10px 24px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-tech-secondary:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: #ffffff !important;
+            color: #ffffff !important;
+            transform: translateY(-2px);
+        }
+}

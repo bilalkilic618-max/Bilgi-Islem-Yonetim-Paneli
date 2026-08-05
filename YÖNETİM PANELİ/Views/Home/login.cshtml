@@ -1,0 +1,113 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giriş Yap - Bilgi İşlem Destek Sistemi</title>
+    <link rel="stylesheet" href="~/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+    <style>
+            body {
+                background-color: #0f172a !important;
+                background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 40%);
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+            }
+
+            .login-card {
+                background: #1e293b !important;
+                border: 1px solid #334155 !important;
+                border-radius: 12px;
+                padding: 2.5rem;
+                width: 100%;
+                max-width: 420px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            }
+
+            /* Input kutularının yazısını beyaz ve görünür yapıyoruz */
+            .form-control {
+                background-color: #0f172a !important;
+                border: 1px solid #334155 !important;
+                color: #ffffff !important;
+            }
+
+                .form-control:focus {
+                    background-color: #0f172a !important;
+                    border-color: #3b82f6 !important;
+                    color: #ffffff !important;
+                    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+                }
+
+            /* Chrome/Edge Otomatik Doldurma (Autofill) Siyah Yazı / Sarı Arka Plan Engelleyici */
+            input:-webkit-autofill,
+            input:-webkit-autofill:hover,
+            input:-webkit-autofill:focus,
+            input:-webkit-autofill:active {
+                -webkit-text-fill-color: #ffffff !important;
+                -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important;
+                transition: background-color 5000s ease-in-out 0s;
+            }
+
+            .form-label {
+                color: #cbd5e1 !important;
+            }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <h3 class="mb-2" style="color: #ffffff;">bilaltech</h3>
+            <p class="mb-2" style="color: #94a3b8;">Bilgi İşlem Destek Portalı 🛡️</p>
+        </div>
+
+        <!-- Kayıt Başarılı Veya Şifre Değişti Bildirimi -->
+        @if (TempData["BasariMesaji"] != null)
+        {
+            <div class="alert alert-success mb-3" style="background-color: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #86efac; padding: 12px; font-size: 0.88rem; border-radius: 8px;">
+                <i class="bx bx-check-circle me-1"></i> @TempData["BasariMesaji"]
+            </div>
+        }
+
+        <!-- Geçersiz Bağlantı veya Şifre Hatalı Bildirimi -->
+        @if (TempData["HataMesaji"] != null)
+        {
+            <div class="alert alert-danger mb-3" style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 12px; font-size: 0.88rem; border-radius: 8px;">
+                <i class="bx bx-error-circle me-1"></i> @TempData["HataMesaji"]
+            </div>
+        }
+
+        @if (ViewBag.HataMesaji != null)
+        {
+            <div class="alert alert-danger mb-3" style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 12px; font-size: 0.88rem; border-radius: 8px;">
+                <i class="bx bx-error-circle me-1"></i> @ViewBag.HataMesaji
+            </div>
+        }
+
+        <form action="/Home/Login" method="POST" autocomplete="off">
+            <div class="mb-3">
+                <label for="kullaniciAdi" class="form-label text-uppercase">Kullanıcı Adı / E-Posta / Sicil No</label>
+                <input type="text" class="form-control" id="kullaniciAdi" name="kullaniciAdi" placeholder="Kullanıcı adı, e-posta veya Sicil No" required autofocus />
+            </div>
+
+            <div class="mb-3">
+                <label for="sifre" class="form-label text-uppercase">Şifre</label>
+                <input type="password" class="form-control" id="sifre" name="sifre" placeholder="••••••••••••" required />
+            </div>
+
+            <button class="btn btn-primary d-grid w-100 mb-3" type="submit" style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important; border: none !important;">Giriş Yap</button>
+
+            <div class="d-flex justify-content-between mt-3" style="font-size: 0.85rem;">
+                <a href="/Home/SifremiUnuttum" style="color: #94a3b8; text-decoration: none;">Şifremi Unuttum?</a>
+                <a href="/Home/KayitOl" style="color: #60a5fa; text-decoration: none; font-weight: bold;">Yeni Kayıt Oluştur</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+﻿@model List<Yönetim_Paneli.Models.Ariza>
+@{
+    ViewData["Title"] = "Ay Sonu Arıza Raporu";
+}
+
+<div class="container-fluid flex-grow-1 container-p-y">
+    <!-- Başlık ve Yazdır Butonu -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold py-1 mb-0" style="color: #ffffff;">📊 Bilgi İşlem Ay Sonu Arıza Raporu</h4>
+            <small class="text-muted">@ViewBag.RaporAyYil</small>
+        </div>
+        <button onclick="window.print()" class="btn btn-danger">
+            <i class="bx bx-printer me-1"></i> Raporu Yazdır / PDF Al
+        </button>
+    </div>
+
+    <!-- Özet İstatistik Kartları -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark text-white border-secondary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase">Toplam Arıza Bildirimi</h6>
+                    <h2 class="text-primary mb-0">@ViewBag.ToplamAriza</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark text-white border-secondary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase">Çözülen Arızalar</h6>
+                    <h2 class="text-success mb-0">@ViewBag.CozulenAriza</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark text-white border-secondary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase">Devam Eden / Bekleyen</h6>
+                    <h2 class="text-warning mb-0">@ViewBag.BekleyenAriza</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detaylı Arıza Tablosu -->
+    <div class="card bg-dark text-white border-secondary">
+        <h5 class="card-header text-white border-bottom border-secondary">Dönem İçi Arıza Kayıt Detayları</h5>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Personel</th>
+                        <th>Departman</th>
+                        <th>Cihaz Türü</th>
+                        <th>Aciliyet</th>
+                        <th>Arıza Açıklaması</th>
+                        <th>İlgilenen Teknisyen</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        int sira = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@sira</strong></td>
+                                <td>@item.AdSoyad <br /><small class="text-muted">@item.PersonelNo</small></td>
+                                <td>@item.Departman</td>
+                                <td><span class="badge bg-label-info">@item.CihazTuru</span></td>
+                                <td>@item.AciliyetDurumu</td>
+                                <td>@item.HataAciklaması</td>
+                                <td>@(string.IsNullOrEmpty(item.ArizayiAlan) ? "Atanmadı" : item.ArizayiAlan)</td>
+                                <td>
+                                    @if (item.Durum == "Çözüldü" || item.Durum == "Tamamlandı")
+                                    {
+                                        <span class="badge bg-success">@item.Durum</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">@item.Durum</span>
+                                    }
+                                </td>
+                            </tr>
+                            sira++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">Bu ay için henüz kayıtlı arıza bulunmuyor.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .layout-navbar, .layout-menu, .btn, footer {
+            display: none !important;
+        }
+
+        body, .content-wrapper, .bg-dark {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+
+        .card {
+            border: 1px solid #ccc !important;
+            box-shadow: none !important;
+        }
+
+        .table {
+            color: #000000 !important;
+        }
+    }
+</style>

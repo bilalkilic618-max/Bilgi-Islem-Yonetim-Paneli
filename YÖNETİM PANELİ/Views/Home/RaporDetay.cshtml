@@ -1,0 +1,113 @@
+﻿@model List<Yönetim_Paneli.Models.Ariza>
+@{
+    ViewData["Title"] = ViewBag.RaporBasligi;
+}
+
+<div class="container-fluid flex-grow-1 container-p-y">
+    <!-- Üst Başlık & Yazdır Butonları -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold py-1 mb-0 text-white">@ViewBag.RaporBasligi</h4>
+            <small class="text-muted">Rapor Tarihi: @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</small>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn btn-danger">
+                <i class="bx bx-printer me-1"></i> Sayfayı Yazdır / PDF Al
+            </button>
+        </div>
+    </div>
+
+    <!-- Hızlı Filtre Sekmeleri -->
+    <div class="mb-4 d-flex gap-2">
+        <a href="/Home/RaporDetay?durum=Tumu" class="btn btn-sm @(ViewBag.AktifDurum == "Tumu" || string.IsNullOrEmpty(ViewBag.AktifDurum) ? "btn-primary" : "btn-outline-secondary")">
+            Tüm Kayıtlar (@ViewBag.ToplamAriza)
+        </a>
+        <a href="/Home/RaporDetay?durum=Bekleyen" class="btn btn-sm @(ViewBag.AktifDurum == "Bekleyen" ? "btn-warning" : "btn-outline-warning")">
+            ⏳ Bekleyenler (@ViewBag.BekleyenAriza)
+        </a>
+        <a href="/Home/RaporDetay?durum=Hazir" class="btn btn-sm @(ViewBag.AktifDurum == "Hazir" ? "btn-info" : "btn-outline-info")">
+            📦 Hazır Olanlar (@ViewBag.HazirAriza)
+        </a>
+        <a href="/Home/RaporDetay?durum=Cozulen" class="btn btn-sm @(ViewBag.AktifDurum == "Cozulen" ? "btn-success" : "btn-outline-success")">
+            ✅ Çözülenler (@ViewBag.CozulenAriza)
+        </a>
+    </div>
+
+    <!-- Rapor Tablosu -->
+    <div class="card bg-dark text-white border-secondary">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Personel</th>
+                        <th>Departman</th>
+                        <th>Cihaz</th>
+                        <th>Aciliyet</th>
+                        <th>Açıklama</th>
+                        <th>İlgilenen Teknisyen</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        int sira = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@sira</strong></td>
+                                <td><strong>@item.AdSoyad</strong><br /><small class="text-muted">@item.PersonelNo</small></td>
+                                <td>@item.Departman</td>
+                                <td><span class="badge bg-label-info">@item.CihazTuru</span></td>
+                                <td>@item.AciliyetDurumu</td>
+                                <td>@item.HataAciklaması</td>
+                                <td>@(string.IsNullOrEmpty(item.ArizayiAlan) ? "Atanmadı" : item.ArizayiAlan)</td>
+                                <td>
+                                    @if (item.Durum == "ÇÖZÜLDÜ" || item.Durum == "Çözüldü" || item.Durum == "Tamamlandı")
+                                    {
+                                        <span class="badge bg-success">ÇÖZÜLDÜ</span>
+                                    }
+                                    else if (item.Durum == "HAZIR" || item.Durum == "Hazır")
+                                    {
+                                        <span class="badge bg-warning text-dark">HAZIR</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">BEKLİYOR</span>
+                                    }
+                                </td>
+                            </tr>
+                            sira++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">Bu filtreye uygun arıza kaydı bulunamadı.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .layout-navbar, .layout-menu, .btn, .mb-4.d-flex, footer {
+            display: none !important;
+        }
+        body, .content-wrapper, .bg-dark {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        .card {
+            border: 1px solid #ccc !important;
+            box-shadow: none !important;
+        }
+        .table {
+            color: #000000 !important;
+        }
+    }
+</style>

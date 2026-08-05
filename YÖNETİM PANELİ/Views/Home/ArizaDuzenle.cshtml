@@ -1,0 +1,167 @@
+﻿@model Yönetim_Paneli.Models.Ariza
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="~/assets/" data-template="vertical-menu-template-free">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>Arıza Kaydı Düzenle - Bilgi İşlem Terminali</title>
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/core.css" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="~/assets/css/demo.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <!-- Helpers & Config -->
+    <script src="~/assets/vendor/js/helpers.js"></script>
+    <script src="~/assets/js/config.js"></script>
+</head>
+<body class="tech-body">
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            <!-- SOL MENÜ -->
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo py-3 d-flex justify-content-between align-items-center">
+                    <a href="/Home/Index" class="app-brand-link d-flex align-items-center gap-2">
+                        <span class="app-brand-logo demo"><i class="bx bx-shield-quarter text-primary fs-2"></i></span>
+                        <span class="app-brand-text demo menu-text fw-bolder text-white text-uppercase" style="letter-spacing: 1px;">BİLGİ İŞLEM</span>
+                    </a>
+                    <!-- Mobilde menüyü kapatma butonu -->
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                        <i class="bx bx-chevron-left bx-sm align-middle"></i>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item"><a href="/Home/Index" class="menu-link"><i class="menu-icon tf-icons bx bx-home-circle"></i><div>Ana Panel</div></a></li>
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">İşlemler</span></li>
+                    <li class="menu-item active"><a href="/Home/ArizaEkle" class="menu-link"><i class="menu-icon tf-icons bx bx-wrench"></i><div>Arıza Talepleri</div></a></li>
+                    <li class="menu-item"><a href="/Home/EnvanterListesi" class="menu-link"><i class="menu-icon tf-icons bx bx-desktop"></i><div>Donanım Envanteri</div></a></li>
+                    <li class="menu-item"><a href="/Home/PersonelListesi" class="menu-link"><i class="menu-icon tf-icons bx bx-user-pin"></i><div>Personel Yönetimi</div></a></li>
+                </ul>
+            </aside>
+
+            <!-- SAĞ TARAF -->
+            <div class="layout-page">
+                <!-- MOBİL VE MASAÜSTÜ TOPBAR -->
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+                    <!-- Mobilde Hamburger Menü Açma Butonu -->
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm text-white"></i>
+                        </a>
+                    </div>
+
+                    <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+                        <ul class="navbar-nav flex-row align-items-center ms-auto gap-2 gap-sm-3">
+                            <li class="nav-item d-flex align-items-center me-1 me-sm-2">
+                                <span class="fw-semibold text-white d-none d-sm-block me-2">M. Bilal Kılıç</span>
+                                <div class="avatar avatar-online"><span class="avatar-initial rounded-circle bg-label-primary fw-bold">BK</span></div>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/Home/CikisYap" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 py-1 px-2 px-sm-3" style="border-radius: 20px;">
+                                    <i class="bx bx-power-off fs-5"></i><span class="d-none d-sm-inline">Çıkış Yap</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        <div class="row justify-content-center">
+                            <div class="col-12 col-xl-9 col-lg-11">
+                                <div class="card tech-card mb-4 mt-2 mt-sm-3">
+                                    <div class="tech-card-header d-flex justify-content-between align-items-center py-3 px-3 px-sm-4">
+                                        <h5 class="mb-0 tech-title fs-6 fs-sm-5"><i class="bx bx-edit me-2 text-warning"></i>ARIZA KAYDI GÜNCELLEME TERMİNALİ</h5>
+                                    </div>
+                                    <div class="card-body mt-3 mt-sm-4 px-3 px-sm-4">
+                                        <form action="/Home/ArizaDuzenle" method="post">
+                                            <input type="hidden" name="Id" value="@Model.Id" />
+
+                                            <!-- MOBİL UYUM: col-12 col-md-4 ile g-3 eklendi -->
+                                            <div class="row g-3 mb-3 mb-sm-4">
+                                                <div class="col-12 col-md-4">
+                                                    <label class="tech-label" for="PersonelNo">Personel No</label>
+                                                    <input type="text" class="form-control tech-input" id="PersonelNo" name="PersonelNo" value="@Model.PersonelNo" required />
+                                                </div>
+                                                <div class="col-12 col-md-4">
+                                                    <label class="tech-label" for="AdSoyad">Personel Adı Soyadı</label>
+                                                    <input type="text" class="form-control tech-input" id="AdSoyad" name="AdSoyad" value="@Model.AdSoyad" required />
+                                                </div>
+                                                <div class="col-12 col-md-4">
+                                                    <label class="tech-label" for="Departman">Departman / Birim</label>
+                                                    <input type="text" class="form-control tech-input" id="Departman" name="Departman" value="@Model.Departman" required />
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-3 mb-3 mb-sm-4">
+                                                <div class="col-12 col-md-4">
+                                                    <label class="tech-label" for="CihazTuru">Arızalı Cihaz Türü</label>
+                                                    <select class="form-select tech-input" id="CihazTuru" name="CihazTuru" required>
+                                                        <option value="Masaüstü PC" selected="@(Model.CihazTuru == "Masaüstü PC")">Masaüstü Bilgisayar</option>
+                                                        <option value="Yazıcı / Tarayıcı" selected="@(Model.CihazTuru == "Yazıcı / Tarayıcı")">Yazıcı / Tarayıcı</option>
+                                                        <option value="Ağ / Network" selected="@(Model.CihazTuru == "Ağ / Network")">Ağ Ekipmanı</option>
+                                                        <option value="Diğer" selected="@(Model.CihazTuru == "Diğer")">Diğer Donanım</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-12 col-md-4">
+                                                    <label class="tech-label" for="AciliyetDurumu">Aciliyet Seviyesi</label>
+                                                    <select class="form-select tech-input" id="AciliyetDurumu" name="AciliyetDurumu" required>
+                                                        <option value="Düşük" selected="@(Model.AciliyetDurumu == "Düşük")">Düşük</option>
+                                                        <option value="Orta" selected="@(Model.AciliyetDurumu == "Orta")">Orta</option>
+                                                        <option value="Kritik" selected="@(Model.AciliyetDurumu == "Kritik")">Kritik</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-12 col-md-4">
+                                                    <label class="tech-label" for="ArizayiAlan">Arızayı Üstlenen Görevli</label>
+                                                    <input type="text" class="form-control tech-input" id="ArizayiAlan" name="ArizayiAlan" value="@Model.ArizayiAlan" />
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-3 mb-3 mb-sm-4">
+                                                <div class="col-12 col-md-6">
+                                                    <label class="tech-label" for="Durum">Arıza Güncel Durumu</label>
+                                                    <select class="form-select tech-input" id="Durum" name="Durum" required>
+                                                        <option value="Bekliyor" selected="@(Model.Durum == "Bekliyor")">⏳ Bekliyor (Sırada)</option>
+                                                        <option value="Hazır" selected="@(Model.Durum == "Hazır" || Model.Durum == "Çözüldü")">✅ Hazır / Çözüldü (Tamamlandı)</option>
+                                                        <option value="İptal" selected="@(Model.Durum == "İptal")">❌ İptal Edildi</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <label class="tech-label" for="HataAciklaması">Arıza Açıklaması</label>
+                                                <textarea class="form-control tech-input" id="HataAciklaması" name="HataAciklaması" rows="4" required>@Model.HataAciklaması</textarea>
+                                            </div>
+
+                                            <!-- MOBİL UYUM: Butonlar mobilde w-100 alt alta, PC'de yan yana -->
+                                            <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 gap-sm-3 mt-4">
+                                                <a href="/Home/Index" class="btn btn-tech-secondary w-100 w-sm-auto text-center">Vazgeç</a>
+                                                <button type="submit" class="btn btn-tech-primary w-100 w-sm-auto">Değişiklikleri Kaydet</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobilde Menü Arka Plan Karartması -->
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Gerekli JS Dosyaları -->
+    <script src="~/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="~/assets/vendor/libs/popper/popper.js"></script>
+    <script src="~/assets/vendor/js/bootstrap.js"></script>
+    <script src="~/assets/vendor/js/menu.js"></script>
+    <script src="~/assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+﻿@model IEnumerable<Yönetim_Paneli.Models.Teknisyen>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="~/assets/" data-template="vertical-menu-template-free">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>Bilgi İşlem Personel Mimarisi</title>
+    <link class="template-customizer-core-css" rel="stylesheet" href="~/assets/vendor/css/core.css" />
+    <link class="template-customizer-theme-css" rel="stylesheet" href="~/assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="~/assets/css/demo.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <!-- Helpers & Config -->
+    <script src="~/assets/vendor/js/helpers.js"></script>
+    <script src="~/assets/js/config.js"></script>
+</head>
+<body class="tech-body">
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            <!-- SOL MENÜ -->
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo py-3 d-flex justify-content-between align-items-center">
+                    <a href="/Home/Index" class="app-brand-link d-flex align-items-center gap-2">
+                        <span class="app-brand-logo demo">
+                            <i class="bx bx-shield-quarter text-primary fs-2"></i>
+                        </span>
+                        <span class="app-brand-text demo menu-text fw-bolder text-white text-uppercase" style="letter-spacing: 1px;">BİLGİ İŞLEM</span>
+                    </a>
+                    <!-- Mobilde menüyü kapatma butonu -->
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                        <i class="bx bx-chevron-left bx-sm align-middle text-white"></i>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item">
+                        <a href="/Home/Index" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                            <div>Ana Panel</div>
+                        </a>
+                    </li>
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">İşlemler</span></li>
+                    <li class="menu-item">
+                        <a href="/Home/ArizaEkle" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-wrench"></i>
+                            <div>Arıza Talepleri</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="/Home/EnvanterListesi" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-desktop"></i>
+                            <div>Donanım Envanteri</div>
+                        </a>
+                    </li>
+                    <li class="menu-item active">
+                        <a href="/Home/PersonelListesi" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-user-pin"></i>
+                            <div>Personel Yönetimi</div>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- SAĞ İÇERİK ALANI -->
+            <div class="layout-page">
+                <!-- TOPBAR -->
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+                    <!-- Mobilde Hamburger Menü Açma Butonu -->
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm text-white"></i>
+                        </a>
+                    </div>
+
+                    <div class="navbar-nav align-items-center flex-grow-1">
+                        <div class="nav-item d-flex align-items-center w-100">
+                            <i class="bx bx-search fs-4 lh-0 text-muted me-2"></i>
+                            <input type="text" id="personelAramaInput" class="form-control border-0 shadow-none tech-input" placeholder="Sicil No, İsim veya Unvan Ara..." />
+                        </div>
+                    </div>
+
+                    <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+                        <ul class="navbar-nav flex-row align-items-center ms-auto gap-2 gap-sm-3">
+                            <li class="nav-item d-flex align-items-center me-1 me-sm-2">
+                                <span class="fw-semibold text-white d-none d-sm-block me-2">M. Bilal Kılıç</span>
+                                <div class="avatar avatar-online">
+                                    <span class="avatar-initial rounded-circle bg-label-primary fw-bold">BK</span>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/Home/CikisYap" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 py-1 px-2 px-sm-3" style="border-radius: 20px;">
+                                    <i class="bx bx-power-off fs-5"></i>
+                                    <span class="d-none d-sm-inline">Çıkış Yap</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        <div class="row">
+                            <div class="col-lg-12 mb-4">
+                                <div class="card tech-card">
+                                    <!-- MOBİL UYUM: Header esnek yapıldı -->
+                                    <div class="card-body d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
+                                        <div>
+                                            <h5 class="card-title tech-title mb-1 fs-5">Bilgi İşlem Teknik Kadrosu Mimarisi 🛡️</h5>
+                                            <p class="text-light mb-0">Sistemde kayıtlı toplam <span class="badge bg-label-success">@Model.Count()</span> teknik personel tanımlı.</p>
+                                        </div>
+                                        <a href="/Home/PersonelEkle" class="btn btn-sm btn-tech-primary w-100 w-sm-auto text-center">Yeni Teknik Personel Tanımla</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card tech-card">
+                                    <h5 class="card-header tech-title fs-6 py-3">Aktif Bilgi İşlem Operatörleri</h5>
+                                    <div class="table-responsive text-nowrap">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr class="border-bottom border-secondary">
+                                                    <th class="text-white">ID</th>
+                                                    <th class="text-white">Sicil No (ID-Code)</th>
+                                                    <th class="text-white">Ad Soyad</th>
+                                                    <th class="text-white">E-Posta</th>
+                                                    <th class="text-white">Unvan / Görev</th>
+                                                    <th class="text-white">E-Posta Onayı</th>
+                                                    <th class="text-white">Yönetici Onayı</th>
+                                                    <th class="text-white">İşlemler</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="table-border-bottom-0">
+                                                @if (Model != null && Model.Any())
+                                                {
+                                                    foreach (var item in Model)
+                                                    {
+                                                        <tr class="border-bottom border-secondary">
+                                                            <td><strong>#@item.Id</strong></td>
+                                                            <td><span class="text-success fw-semibold">@item.SicilNo</span></td>
+                                                            <td class="fw-bold text-white">@item.AdSoyad</td>
+                                                            <td class="text-light">@item.Email</td>
+                                                            <td><span class="badge bg-label-info">@item.Unvan</span></td>
+                                                            <td>
+                                                                @if (item.EmailOnayliMi)
+                                                                {
+                                                                    <span class="badge bg-success">Doğrulandı</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge bg-warning text-dark">Kod Bekliyor</span>
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                @if (item.YoneticiOnayliMi)
+                                                                {
+                                                                    <span class="badge bg-success">Onaylı</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge bg-danger">Onay Bekliyor</span>
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex gap-2">
+                                                                    @if (!item.YoneticiOnayliMi && item.EmailOnayliMi)
+                                                                    {
+                                                                        <a href="/Home/KullaniciOnayla/@item.Id" class="btn btn-sm btn-success py-1 px-2">
+                                                                            <i class="bx bx-check me-1"></i>Onayla
+                                                                        </a>
+                                                                    }
+                                                                    <a href="/Home/PersonelSil/@item.Id" class="btn btn-sm btn-tech-secondary py-1 px-2 text-danger border-danger" onclick="return confirm('Bu personeli silmek istediğine emin misin kanka?')">
+                                                                        <i class="bx bx-trash me-1"></i>Sistemden Kaldır
+                                                                    </a>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <tr>
+                                                        <td colspan="8" class="text-center py-4 text-muted">Sistemde henüz kayıtlı personel bulunamadı.</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobilde Menü Arka Plan Karartması -->
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scriptler -->
+    <script src="~/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="~/assets/vendor/libs/popper/popper.js"></script>
+    <script src="~/assets/vendor/js/bootstrap.js"></script>
+    <script src="~/assets/vendor/js/menu.js"></script>
+    <script src="~/assets/js/main.js"></script>
+
+    <script>
+            $(document).ready(function() {
+                $("#personelAramaInput").on("keyup", function() {
+                    var value = $(this).val().toLowerCase();
+                    $("table tbody tr").filter(function() {
+                        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                    });
+                });
+            });
+    </script>
+</body>
+</html>

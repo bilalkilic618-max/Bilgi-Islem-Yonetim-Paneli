@@ -1,0 +1,223 @@
+﻿<!DOCTYPE html>
+<html lang="tr" class="dark-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="~/assets/" data-template="vertical-menu-template-free">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>Bilgi İşlem Portalı</title>
+
+    <!-- Gerekli CSS'ler -->
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/core.css" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <!-- Helpers & Config -->
+    <script src="~/assets/vendor/js/helpers.js"></script>
+    <script src="~/assets/js/config.js"></script>
+
+    <style>
+            /* Sol Menü Özel İyileştirmeleri */
+            .layout-menu {
+                box-shadow: 4px 0 15px rgba(0,0,0,0.2) !important;
+            }
+
+            /* Menü içeriğinin taşmasını engelle ve scroll ver */
+            .menu-inner {
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding-bottom: 2rem !important;
+            }
+
+                /* Scrollbar'ı gizle ama kaydırma çalışsın (Modern Görünüm) */
+                .menu-inner::-webkit-scrollbar {
+                    width: 4px;
+                }
+
+                .menu-inner::-webkit-scrollbar-thumb {
+                    background-color: #334155;
+                    border-radius: 4px;
+                }
+
+            /* Çıkış Yap Butonu Özel Stili */
+            .btn-logout-sidebar {
+                margin: 0.5rem 1rem;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                background-color: transparent;
+            }
+
+                .btn-logout-sidebar:hover {
+                    background-color: #ff3e1d !important;
+                    color: #ffffff !important;
+                    box-shadow: 0 4px 10px rgba(255, 62, 29, 0.4);
+                }
+    </style>
+</head>
+<body class="tech-body" style="background-color: #0f172a;">
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+
+            <!-- 1. SOL MENÜ (SİDEBAR) -->
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo py-4 d-flex justify-content-between align-items-center">
+                    <a href="/Home/Index" class="app-brand-link d-flex align-items-center gap-2">
+                        <span class="app-brand-logo demo">
+                            <i class="bx bx-shield-quarter text-primary" style="font-size: 2rem;"></i>
+                        </span>
+                        <span class="app-brand-text demo menu-text fw-bolder text-white fs-4" style="letter-spacing: 0.5px;">BİLGİ İŞLEM</span>
+                    </a>
+                    <!-- Mobilde menüyü kapatma butonu -->
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                        <i class="bx bx-chevron-left bx-sm align-middle text-white"></i>
+                    </a>
+                </div>
+
+                <div class="menu-inner-shadow"></div>
+
+                <ul class="menu-inner py-1">
+                    <li class="menu-item @(Context.Request.Path == "/" || Context.Request.Path.ToString().Contains("Index") ? "active" : "")">
+                        <a href="/Home/Index" class="menu-link" onclick="window.location.href='/Home/Index'; return false;">
+                            <i class="menu-icon tf-icons bx bx-home-circle text-primary"></i>
+                            <div>Ana Panel (Arızalar)</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-header small text-uppercase mt-3"><span class="menu-header-text text-muted">RAPORLAMA & İSTATİSTİK</span></li>
+
+                    <li class="menu-item @(Context.Request.Query["durum"] == "Tumu" ? "active" : "")">
+                        <a href="/Home/RaporDetay?durum=Tumu" class="menu-link" onclick="window.location.href='/Home/RaporDetay?durum=Tumu'; return false;">
+                            <i class="menu-icon tf-icons bx bx-bar-chart-alt-2 text-info"></i>
+                            <div>Genel Tüm Arızalar</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @(Context.Request.Query["durum"] == "Bekleyen" ? "active" : "")">
+                        <a href="/Home/RaporDetay?durum=Bekleyen" class="menu-link" onclick="window.location.href='/Home/RaporDetay?durum=Bekleyen'; return false;">
+                            <i class="menu-icon tf-icons bx bx-time-five text-warning"></i>
+                            <div>Bekleyen Arızalar</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @(Context.Request.Query["durum"] == "Hazir" ? "active" : "")">
+                        <a href="/Home/RaporDetay?durum=Hazir" class="menu-link" onclick="window.location.href='/Home/RaporDetay?durum=Hazir'; return false;">
+                            <i class="menu-icon tf-icons bx bx-check-double text-success"></i>
+                            <div>Hazır Olan Arızalar</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @(Context.Request.Query["durum"] == "Cozulen" ? "active" : "")">
+                        <a href="/Home/RaporDetay?durum=Cozulen" class="menu-link" onclick="window.location.href='/Home/RaporDetay?durum=Cozulen'; return false;">
+                            <i class="menu-icon tf-icons bx bx-check-circle text-primary"></i>
+                            <div>Çözülen Arızalar</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-header small text-uppercase mt-3"><span class="menu-header-text text-muted">SİSTEM YÖNETİMİ</span></li>
+
+                    <li class="menu-item @(Context.Request.Path.ToString().Contains("Depo") ? "active" : "")">
+                        <a href="/Home/DepoYonetimi" class="menu-link" onclick="window.location.href='/Home/DepoYonetimi'; return false;">
+                            <i class="menu-icon tf-icons bx bx-package text-warning"></i>
+                            <div>Depo Yönetimi 🔐</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @(Context.Request.Path.ToString().Contains("Envanter") ? "active" : "")">
+                        <a href="/Home/EnvanterListesi" class="menu-link" onclick="window.location.href='/Home/EnvanterListesi'; return false;">
+                            <i class="menu-icon tf-icons bx bx-devices text-info"></i>
+                            <div>Donanım Envanteri</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @(Context.Request.Path.ToString().Contains("Personel") ? "active" : "")">
+                        <a href="/Home/PersonelListesi" class="menu-link" onclick="window.location.href='/Home/PersonelListesi'; return false;">
+                            <i class="menu-icon tf-icons bx bx-user-check text-success"></i>
+                            <div>Teknik Personeller</div>
+                        </a>
+                    </li>
+
+                    <!-- ÇIKIŞ YAP BUTONU (Şık & Belirgin Tasarım) -->
+                    <li class="menu-header small text-uppercase mt-4"><span class="menu-header-text text-muted">OTURUM YÖNETİMİ</span></li>
+                    <li class="menu-item mt-2">
+                        <a href="/Home/CikisYap" class="menu-link btn-logout-sidebar text-danger border border-danger d-flex justify-content-center align-items-center" onclick="window.location.href='/Home/CikisYap'; return false;">
+                            <i class="bx bx-power-off fs-5 me-2"></i>
+                            <div class="fw-bold">Sistemden Çıkış Yap</div>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- 2. SAĞ TARAF (SAYFA İÇERİĞİ VE ÜST BAR) -->
+            <div class="layout-page">
+
+                <!-- 🌟 YENİ EKLENEN PROFOSYONEL ÜST BAR (TOP NAVBAR) 🌟 -->
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme mt-3" id="layout-navbar" style="background-color: #1e293b !important; border: 1px solid #334155;">
+
+                    <!-- Mobilde Hamburger Menü Açma Butonu -->
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm text-white"></i>
+                        </a>
+                    </div>
+
+                    <div class="navbar-nav-right d-flex align-items-center justify-content-between w-100" id="navbar-collapse">
+                        <!-- Sol Kısım: Karşılama Metni -->
+                        <div class="navbar-nav align-items-center">
+                            <div class="nav-item d-flex align-items-center">
+                                <i class="bx bx-buildings fs-4 lh-0 text-primary me-2"></i>
+                                <span class="text-white fw-semibold fs-5 d-none d-sm-block">Merkezi Yönetim Terminali</span>
+                            </div>
+                        </div>
+
+                        <!-- Sağ Kısım: Kullanıcı Profili (DİNAMİK) -->
+                        <ul class="navbar-nav flex-row align-items-center ms-auto">
+                            @{
+                                // Çerezden giriş yapan kişinin bilgilerini çekiyoruz
+                                string aktifAd = Context.Request.Cookies["KullaniciAd"] ?? "Sistem Kullanıcısı";
+                                string aktifRol = Context.Request.Cookies["KullaniciRol"] ?? "Personel";
+
+                                // Yuvarlak ikon için ismin baş harflerini bulma matematiği
+                                string basHarfler = "SK";
+                                var isimParcalari = aktifAd.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                                if (isimParcalari.Length >= 2)
+                                {
+                                    basHarfler = isimParcalari[0].Substring(0, 1) + isimParcalari[isimParcalari.Length - 1].Substring(0, 1);
+                                }
+                                else if (isimParcalari.Length == 1)
+                                {
+                                    basHarfler = isimParcalari[0].Substring(0, 1);
+                                }
+                            }
+                            <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                                <a class="nav-link dropdown-toggle hide-arrow d-flex align-items-center gap-2" href="javascript:void(0);" data-bs-toggle="dropdown">
+                                    <div class="d-flex flex-column text-end d-none d-sm-block">
+                                        <span class="fw-bold text-white">@aktifAd</span>
+                                        <small class="text-muted" style="font-size: 0.75rem;">@aktifRol</small>
+                                    </div>
+                                    <div class="avatar avatar-online">
+                                        <span class="avatar-initial rounded-circle bg-label-primary fw-bold text-white shadow-sm">@basHarfler.ToUpper()</span>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- SAYFA İÇERİĞİ -->
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Mobilde Menü Arka Plan Karartması -->
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- JS Dosyaları -->
+    <script src="~/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="~/assets/vendor/libs/popper/popper.js"></script>
+    <script src="~/assets/vendor/js/bootstrap.js"></script>
+    <script src="~/assets/vendor/js/menu.js"></script>
+    <script src="~/assets/js/main.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

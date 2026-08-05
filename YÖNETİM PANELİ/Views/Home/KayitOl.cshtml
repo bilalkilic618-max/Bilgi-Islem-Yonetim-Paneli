@@ -1,0 +1,96 @@
+﻿@model Yönetim_Paneli.Models.Teknisyen
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kayıt Ol - Bilgi İşlem Destek Sistemi</title>
+    <link rel="stylesheet" href="~/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="~/assets/vendor/css/theme-default.css" />
+    <link rel="stylesheet" href="~/assets/vendor/fonts/boxicons.css" />
+    <style>
+            body {
+                background-color: #0f172a !important;
+                background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 40%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+                padding: 20px 0;
+            }
+
+            .register-card {
+                background: #1e293b !important;
+                border: 1px solid #334155 !important;
+                border-radius: 12px;
+                padding: 2.5rem;
+                width: 100%;
+                max-width: 480px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            }
+
+            .form-control {
+                background-color: #0f172a !important;
+                border: 1px solid #334155 !important;
+                color: #f8fafc !important;
+            }
+
+            .form-label {
+                color: #cbd5e1 !important;
+            }
+    </style>
+</head>
+<body>
+    <div class="register-card">
+        <div class="text-center mb-4">
+            <h3 class="mb-2" style="color: #ffffff;">bilaltech</h3>
+            <p class="mb-4" style="color: #94a3b8;">Yeni Teknik Personel Hesabı Oluştur 🛡️</p>
+        </div>
+
+        <form action="/Home/KayitOl" method="POST" autocomplete="off">
+            <div class="mb-3">
+                <label for="AdSoyad" class="form-label text-uppercase">Ad Soyad</label>
+                <input type="text" class="form-control" id="AdSoyad" name="AdSoyad" value="@Model?.AdSoyad" placeholder="Örn: M. Bilal Kılıç" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="Email" class="form-label text-uppercase">E-Posta Adresi</label>
+                <input type="email" class="form-control" id="Email" name="Email" value="@Model?.Email" placeholder="ornek@domain.com" required />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Unvan" class="form-label text-uppercase">Unvan / Görev</label>
+                    <input type="text" class="form-control" id="Unvan" name="Unvan" value="@Model?.Unvan" placeholder="Sistem Uzmanı" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Telefon" class="form-label text-uppercase">Telefon</label>
+                    <input type="text" class="form-control" id="Telefon" name="Telefon" value="@Model?.Telefon" placeholder="05xx xxx xx xx" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="Sifre" class="form-label text-uppercase">Şifre Belirle</label>
+                <input type="password" class="form-control" id="Sifre" name="Sifre" placeholder="••••••••••••" autocomplete="new-password" required />
+            </div>
+
+            @if (ViewBag.HataMesaji != null)
+            {
+                <div class="alert alert-danger" style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 10px; margin-bottom: 15px; font-size: 0.9rem; border-radius: 6px;">
+                    <i class="bx bx-error-circle me-1"></i> @ViewBag.HataMesaji
+                </div>
+            }
+
+            <button class="btn btn-primary d-grid w-100 mb-3" type="submit" style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important; border: none !important;">Hesabı Oluştur ve Kaydet</button>
+
+            <div class="text-center">
+                <a href="/Home/Login" style="color: #60a5fa; text-decoration: none; font-size: 0.9rem;">Zaten bir hesabın var mı? Giriş Yap</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
