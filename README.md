@@ -8,7 +8,8 @@ Kurumsal organizasyonların bilgi işlem süreçlerini (arıza takibi, donanım 
 ## 🚀 Canlı Demo ve Test Ortamı
 Uygulamanın çalışan sürümünü (Deploy) aşağıdaki bağlantıdan test edebilirsiniz:
 
-- 🌐 **Canlı Uygulama:** [bilgiislempaneli.runasp.net](http://bilgiislempaneli.runasp.net)
+- 🌐 **Canlı Uygulama:** [bilgiislempaneli.runasp.net]
+bilgiislempaneli.runasp.net
 
 ## ⚙️ Mimari ve Teknolojiler (Tech Stack)
 Proje, sürdürülebilirlik ve modern standartlar gözetilerek geliştirilmiştir.
