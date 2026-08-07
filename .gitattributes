@@ -1,3 +1,4 @@
 ﻿*.cshtml linguist-language=C#
-wwwroot/** linguist-vendored
-*.html linguist-documentation
+*.html linguist-generated=true
+*.htm linguist-generated=true
+wwwroot/* linguist-generated=true
