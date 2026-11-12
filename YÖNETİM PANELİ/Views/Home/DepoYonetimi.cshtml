@@ -197,6 +197,7 @@
                 }
 
                 <form action="/Home/DepoGirisYap" method="POST">
+                    @Html.AntiForgeryToken()
                     <input type="password" name="depoSifresi" class="form-control text-center fs-4 mb-3" placeholder="••••••••" required autofocus />
                     <button type="submit" class="btn btn-primary btn-lg w-100 mb-2 fs-6">Sisteme Giriş Yap</button>
                     <a href="/Home/Index" class="btn btn-link text-muted btn-sm text-decoration-none">Ana Panele Dön</a>
@@ -278,6 +279,7 @@
                     </div>
                     <div class="card-body mt-3 px-3 px-sm-4">
                         <form action="/Home/DepoHareketEkle" method="POST">
+                            @Html.AntiForgeryToken()
                             <div class="row g-3">
                                 <div class="col-12 col-sm-6 col-md-2">
                                     <label class="form-label small text-muted">İşlem Türü</label>
@@ -427,9 +429,12 @@
                                                 <a href="/Home/EnvanterDuzenle/@env.Id" class="btn btn-sm btn-warning fw-bold px-2 me-1">
                                                     <i class="bx bx-edit-alt"></i>
                                                 </a>
-                                                <a href="/Home/EnvanterSil/@env.Id" onclick="return confirm('Bu envanteri silmek istediğinize emin misiniz?')" class="btn btn-sm btn-danger px-2">
-                                                    <i class="bx bx-trash"></i>
-                                                </a>
+                                                <form action="/Home/EnvanterSil/@env.Id" method="post" class="d-inline m-0" onsubmit="return confirm('Bu envanteri silmek istediğinize emin misiniz?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger px-2">
+                                                        <i class="bx bx-trash"></i>
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     }

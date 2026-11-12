@@ -90,7 +90,7 @@
             </div>
         }
 
-        <form action="/Home/Login" method="POST" autocomplete="off">
+        <form action="/Home/Login@(Context.Request.QueryString)" method="POST" autocomplete="off">
             <div class="mb-3">
                 <label for="kullaniciAdi" class="form-label text-uppercase">Kullanıcı Adı / E-Posta / Sicil No</label>
                 <input type="text" class="form-control" id="kullaniciAdi" name="kullaniciAdi" placeholder="Kullanıcı adı, e-posta veya Sicil No" required autofocus />

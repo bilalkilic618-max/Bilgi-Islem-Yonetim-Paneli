@@ -166,9 +166,9 @@
                         <!-- Sağ Kısım: Kullanıcı Profili (DİNAMİK) -->
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
                             @{
-                                // Çerezden giriş yapan kişinin bilgilerini çekiyoruz
-                                string aktifAd = Context.Request.Cookies["KullaniciAd"] ?? "Sistem Kullanıcısı";
-                                string aktifRol = Context.Request.Cookies["KullaniciRol"] ?? "Personel";
+                                // Giriş yapan kişinin bilgileri şifreli oturum çerezinden (claims) okunuyor
+                                string aktifAd = User.Identity?.Name ?? "Sistem Kullanıcısı";
+                                string aktifRol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Personel";
 
                                 // Yuvarlak ikon için ismin baş harflerini bulma matematiği
                                 string basHarfler = "SK";

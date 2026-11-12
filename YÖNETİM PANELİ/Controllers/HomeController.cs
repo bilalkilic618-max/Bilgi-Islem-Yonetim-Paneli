@@ -2,20 +2,86 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
+using Yönetim_Paneli.Ayarlar;
 using Yönetim_Paneli.Models;
 using Yönetim_Paneli.Services;
 
 namespace Yönetim_Paneli.Controllers
 {
+    // Varsayılan olarak TÜM sayfalar giriş ister. Giriş gerektirmeyenler [AllowAnonymous] ile işaretlendi.
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly UygulamaDbContext _context;
+        private readonly EmailService _email;
+        private readonly YonetimAyarlari _yonetim;
 
-        public HomeController(UygulamaDbContext context)
+        public HomeController(UygulamaDbContext context, EmailService email, IOptions<YonetimAyarlari> yonetim)
         {
             _context = context;
+            _email = email;
+            _yonetim = yonetim.Value;
+        }
+
+        // Giriş yapan kullanıcının adı (eskiden düz çerezden okunuyordu)
+        private string AktifKullaniciAdi => User.Identity?.Name ?? "Sistem";
+
+        // ==========================================
+        // OTURUM YARDIMCILARI
+        // ==========================================
+
+        private async Task OturumAcAsync(string ad, string rol, bool admin, DateTime? depoOnayBitisUtc)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, ad),
+                new Claim(ClaimTypes.Role, rol)
+            };
+            if (admin) claims.Add(new Claim(YetkiSabitleri.AdminClaim, "true"));
+            if (depoOnayBitisUtc.HasValue)
+                claims.Add(new Claim(YetkiSabitleri.DepoOnayBitisClaim, depoOnayBitisUtc.Value.ToString("o")));
+
+            var kimlik = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(kimlik));
+        }
+
+        // Mevcut oturumu koruyarak sadece depo onayını açar/kapatır
+        private Task DepoOnayiniAyarlaAsync(DateTime? bitisUtc) =>
+            OturumAcAsync(
+                AktifKullaniciAdi,
+                User.FindFirstValue(ClaimTypes.Role) ?? "Personel",
+                User.HasClaim(YetkiSabitleri.AdminClaim, "true"),
+                bitisUtc);
+
+        // Depo ek şifresi girildi mi ve süresi dolmadı mı? (Eskiden "DepoSifreOnayli=true" düz çerezi, elle yazılabiliyordu)
+        private bool DepoOnayliMi()
+        {
+            var deger = User.FindFirstValue(YetkiSabitleri.DepoOnayBitisClaim);
+            return DateTime.TryParse(deger, null, System.Globalization.DateTimeStyles.RoundtripKind, out var bitis)
+                   && bitis > DateTime.UtcNow;
+        }
+
+        // Sadece resim yüklenebilsin: aksi halde wwwroot'a .html/.js gibi dosyalar yüklenip çalıştırılabilirdi
+        private static readonly string[] IzinliResimUzantilari = { ".jpg", ".jpeg", ".png", ".webp" };
+        private static bool ResimDosyasiMi(IFormFile dosya) =>
+            dosya.Length <= 5 * 1024 * 1024
+            && IzinliResimUzantilari.Contains(Path.GetExtension(dosya.FileName).ToLowerInvariant());
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult YetkisizErisim()
+        {
+            TempData["HataMesaji"] = "Bu işlem için yetkiniz yok.";
+            return RedirectToAction("Index");
         }
 
         // ==========================================
@@ -47,7 +113,8 @@ namespace Yönetim_Paneli.Controllers
         }
 
         // Tek tıkla arızayı çözüldü yapma metodu + OTOMATİK LOG
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult DurumCozulduYap(int id)
         {
             var ariza = _context.Arizalar.Find(id);
@@ -59,7 +126,7 @@ namespace Yönetim_Paneli.Controllers
                 var log = new ArizaLog
                 {
                     ArizaId = ariza.Id,
-                    IslemYapan = Request.Cookies["KullaniciAd"] ?? "Sistem",
+                    IslemYapan = AktifKullaniciAdi,
                     YapilanIslem = "Arıza durumu 'ÇÖZÜLDÜ' olarak güncellendi.",
                     Tarih = DateTime.Now
                 };
@@ -126,7 +193,7 @@ namespace Yönetim_Paneli.Controllers
                 var log = new ArizaLog
                 {
                     ArizaId = mevcutAriza.Id,
-                    IslemYapan = Request.Cookies["KullaniciAd"] ?? "Sistem",
+                    IslemYapan = AktifKullaniciAdi,
                     YapilanIslem = $"Arıza bilgileri güncellendi. Yeni Durum: {ariza.Durum}",
                     Tarih = DateTime.Now
                 };
@@ -137,7 +204,8 @@ namespace Yönetim_Paneli.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ArizaSil(int id)
         {
             var veri = _context.Arizalar.Find(id);
@@ -183,6 +251,12 @@ namespace Yönetim_Paneli.Controllers
                 // 📸 FOTOĞRAF YÜKLEME KONTROLÜ
                 if (envanter.FotografDosyasi != null && envanter.FotografDosyasi.Length > 0)
                 {
+                    if (!ResimDosyasiMi(envanter.FotografDosyasi))
+                    {
+                        ViewBag.HataMesaji = "Sadece .jpg, .jpeg, .png veya .webp uzantılı ve 5 MB'tan küçük resim yükleyebilirsiniz.";
+                        return View(envanter);
+                    }
+
                     string wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                     string klasorYolu = Path.Combine(wwwRootPath, "img", "envanter");
 
@@ -191,7 +265,7 @@ namespace Yönetim_Paneli.Controllers
                         Directory.CreateDirectory(klasorYolu);
                     }
 
-                    string dosyaAdi = Guid.NewGuid().ToString() + "_" + Path.GetFileName(envanter.FotografDosyasi.FileName);
+                    string dosyaAdi = Guid.NewGuid().ToString() + Path.GetExtension(envanter.FotografDosyasi.FileName).ToLowerInvariant();
                     string tamYol = Path.Combine(klasorYolu, dosyaAdi);
 
                     using (var fileStream = new FileStream(tamYol, FileMode.Create))
@@ -242,10 +316,16 @@ namespace Yönetim_Paneli.Controllers
 
             if (envanter.FotografDosyasi != null && envanter.FotografDosyasi.Length > 0)
             {
+                if (!ResimDosyasiMi(envanter.FotografDosyasi))
+                {
+                    ViewBag.HataMesaji = "Sadece .jpg, .jpeg, .png veya .webp uzantılı ve 5 MB'tan küçük resim yükleyebilirsiniz.";
+                    return View(mevcutVeri);
+                }
+
                 string wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                 string klasorYolu = Path.Combine(wwwRootPath, "img", "envanter");
 
-                string yeniDosyaAdi = Guid.NewGuid().ToString() + "_" + Path.GetFileName(envanter.FotografDosyasi.FileName);
+                string yeniDosyaAdi = Guid.NewGuid().ToString() + Path.GetExtension(envanter.FotografDosyasi.FileName).ToLowerInvariant();
                 string tamYol = Path.Combine(klasorYolu, yeniDosyaAdi);
 
                 using (var fileStream = new FileStream(tamYol, FileMode.Create))
@@ -270,7 +350,8 @@ namespace Yönetim_Paneli.Controllers
             return RedirectToAction("DepoYonetimi", new { sekme = "envanter" });
         }
 
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult EnvanterSil(int id)
         {
             var veri = _context.Envanterler.Find(id);
@@ -314,6 +395,9 @@ namespace Yönetim_Paneli.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (!string.IsNullOrEmpty(teknisyen.Sifre))
+                    teknisyen.Sifre = SifreServisi.Hashle(teknisyen.Sifre);
+
                 _context.Teknisyenler.Add(teknisyen);
                 _context.SaveChanges();
                 return RedirectToAction("PersonelListesi");
@@ -321,7 +405,9 @@ namespace Yönetim_Paneli.Controllers
             return View(teknisyen);
         }
 
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "Admin")]
         public IActionResult PersonelSil(int id)
         {
             var veri = _context.Teknisyenler.Find(id);
@@ -338,13 +424,16 @@ namespace Yönetim_Paneli.Controllers
         // ==========================================
 
         [HttpGet]
+        [Authorize(Policy = "Admin")]
         public IActionResult OnayBekleyenler()
         {
             var bekleyenler = _context.Teknisyenler.Where(x => x.EmailOnayliMi && !x.YoneticiOnayliMi).ToList();
             return View(bekleyenler);
         }
 
+        // Yöneticiye giden onay mailindeki link buraya geldiği için GET kaldı; ama artık sadece admin çalıştırabilir.
         [HttpGet]
+        [Authorize(Policy = "Admin")]
         public IActionResult KullaniciOnayla(int id)
         {
             var kisi = _context.Teknisyenler.Find(id);
@@ -361,31 +450,56 @@ namespace Yönetim_Paneli.Controllers
         // GERÇEK ÜYELİK, E-POSTA OTP ONAYI, ŞİFRE SIFIRLAMA VE ROL SİSTEMİ
         // ==========================================
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
-        public IActionResult Login(string kullaniciAdi, string sifre)
+        public async Task<IActionResult> Login(string kullaniciAdi, string sifre, string? returnUrl = null)
         {
-            // 1. SÜPER ADMİN GİRİŞİ (Veritabanındaki gerçek adını ve unvanını otomatik çeker)
-            if (kullaniciAdi == "Teknik" && sifre == "2026*")
+            kullaniciAdi = kullaniciAdi?.Trim() ?? string.Empty;
+            sifre ??= string.Empty;
+
+            // 1. SÜPER ADMİN GİRİŞİ — kullanıcı adı ve şifre artık koddan değil ayarlardan geliyor.
+            //    Ayar boşsa admin girişi tamamen kapalıdır.
+            if (!string.IsNullOrEmpty(_yonetim.AdminKullaniciAdi) && !string.IsNullOrEmpty(_yonetim.AdminSifre)
+                && kullaniciAdi == _yonetim.AdminKullaniciAdi
+                && SifreServisi.SabitZamanliEsit(sifre, _yonetim.AdminSifre))
             {
                 var adminPersonel = _context.Teknisyenler.FirstOrDefault(x => x.AdSoyad.Contains("Muhammed Bilal") || x.Email.Contains("bilal"));
 
                 string gercekAd = adminPersonel != null ? adminPersonel.AdSoyad : "Muhammed Bilal Kılıç";
                 string gercekRol = adminPersonel != null && !string.IsNullOrEmpty(adminPersonel.Unvan) ? adminPersonel.Unvan : "Sistem Yöneticisi";
 
-                Response.Cookies.Append("KullaniciRol", gercekRol);
-                Response.Cookies.Append("KullaniciAd", gercekAd);
-                return RedirectToAction("Index");
+                await OturumAcAsync(gercekAd, gercekRol, admin: true, depoOnayBitisUtc: null);
+                return GuvenliYonlendir(returnUrl);
             }
 
-            // 2. NORMAL PERSONEL & LÜTFÜ ABİ GİRİŞİ
-            var personel = _context.Teknisyenler.FirstOrDefault(x =>
-                (x.Email == kullaniciAdi || x.SicilNo == kullaniciAdi || x.AdSoyad == kullaniciAdi) && x.Sifre == sifre);
+            // 2. NORMAL PERSONEL & DEPO SORUMLUSU GİRİŞİ
+            //    Şifre artık SQL sorgusunda düz metin olarak aranmıyor; önce kullanıcı bulunuyor, sonra hash doğrulanıyor.
+            var adaylar = _context.Teknisyenler
+                .Where(x => x.Email == kullaniciAdi || x.SicilNo == kullaniciAdi || x.AdSoyad == kullaniciAdi)
+                .ToList();
+
+            Teknisyen? personel = null;
+            foreach (var aday in adaylar)
+            {
+                if (SifreServisi.Dogrula(aday.Sifre, sifre, out bool yenidenHashle))
+                {
+                    personel = aday;
+                    if (yenidenHashle)
+                    {
+                        // Eski düz şifreli kayıt → ilk başarılı girişte otomatik hash'e çevrilir
+                        aday.Sifre = SifreServisi.Hashle(sifre);
+                        _context.SaveChanges();
+                    }
+                    break;
+                }
+            }
 
             if (personel != null)
             {
@@ -403,25 +517,37 @@ namespace Yönetim_Paneli.Controllers
 
                 string rol = (personel.Unvan != null && personel.Unvan.Contains("Depo")) ? "Depo Sorumlusu" : (string.IsNullOrEmpty(personel.Unvan) ? "Teknisyen" : personel.Unvan);
 
-                Response.Cookies.Append("KullaniciRol", rol);
-                Response.Cookies.Append("KullaniciAd", personel.AdSoyad);
-
-                return RedirectToAction("Index");
+                await OturumAcAsync(personel.AdSoyad, rol, admin: false, depoOnayBitisUtc: null);
+                return GuvenliYonlendir(returnUrl);
             }
 
             ViewBag.HataMesaji = "Kullanıcı adı, e-posta veya şifre hatalı!";
             return View();
         }
 
+        // Girişten sonra sadece kendi sitemizdeki bir adrese dön (open redirect engeli)
+        private IActionResult GuvenliYonlendir(string? returnUrl) =>
+            !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? LocalRedirect(returnUrl)
+                : RedirectToAction("Index");
+
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult KayitOl()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public IActionResult KayitOl(Teknisyen teknisyen)
         {
+            if (string.IsNullOrWhiteSpace(teknisyen.Sifre) || teknisyen.Sifre.Length < 6)
+            {
+                ViewBag.HataMesaji = "Şifre en az 6 karakter olmalıdır!";
+                return View(teknisyen);
+            }
+
             if (!string.IsNullOrEmpty(teknisyen.Email))
             {
                 var varMi = _context.Teknisyenler.FirstOrDefault(x => x.Email == teknisyen.Email);
@@ -432,14 +558,15 @@ namespace Yönetim_Paneli.Controllers
                 }
             }
 
-            string rastgeleKod = new Random().Next(100000, 999999).ToString();
+            // Tahmin edilemeyen kod için kriptografik rastgele sayı (new Random() tahmin edilebilir)
+            string rastgeleKod = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
 
             teknisyen.SicilNo = string.IsNullOrEmpty(teknisyen.SicilNo) ? "PERS-" + new Random().Next(1000, 9999) : teknisyen.SicilNo;
             teknisyen.AdSoyad = string.IsNullOrEmpty(teknisyen.AdSoyad) ? "Yeni Teknisyen" : teknisyen.AdSoyad;
             teknisyen.Unvan = string.IsNullOrEmpty(teknisyen.Unvan) ? "Teknik Personel" : teknisyen.Unvan;
             teknisyen.Telefon = string.IsNullOrEmpty(teknisyen.Telefon) ? "-" : teknisyen.Telefon;
             teknisyen.Email = string.IsNullOrEmpty(teknisyen.Email) ? "" : teknisyen.Email;
-            teknisyen.Sifre = string.IsNullOrEmpty(teknisyen.Sifre) ? "123456" : teknisyen.Sifre;
+            teknisyen.Sifre = SifreServisi.Hashle(teknisyen.Sifre); // Düz metin değil, hash saklanır
 
             teknisyen.EmailOnayKodu = rastgeleKod;
             teknisyen.EmailOnayliMi = false;
@@ -450,15 +577,14 @@ namespace Yönetim_Paneli.Controllers
                 _context.Teknisyenler.Add(teknisyen);
                 _context.SaveChanges();
 
-                EmailService.OnayKoduGonder(teknisyen.Email, rastgeleKod);
+                _email.OnayKoduGonder(teknisyen.Email, rastgeleKod);
 
                 TempData["Email"] = teknisyen.Email;
                 return RedirectToAction("EmailDogrula");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                var icHata = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                ViewBag.HataMesaji = "SQL Hatası: " + icHata;
+                ViewBag.HataMesaji = "Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.";
                 return View(teknisyen);
             }
         }
@@ -467,6 +593,7 @@ namespace Yönetim_Paneli.Controllers
         // E-POSTA DOĞRULAMA (OTP) İŞLEMLERİ
         // ==========================================
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult EmailDogrula()
         {
@@ -474,10 +601,13 @@ namespace Yönetim_Paneli.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public IActionResult EmailDogrula(string email, string kod)
         {
-            var kullanici = _context.Teknisyenler.FirstOrDefault(x => x.Email == email && x.EmailOnayKodu == kod);
+            var kullanici = string.IsNullOrEmpty(kod)
+                ? null
+                : _context.Teknisyenler.FirstOrDefault(x => x.Email == email && x.EmailOnayKodu == kod);
 
             if (kullanici != null)
             {
@@ -487,7 +617,8 @@ namespace Yönetim_Paneli.Controllers
 
                 // 📩 YÖNETİCİYE OTOMATİK BİLDİRİM MAİLİ GÖNDERİLİYOR
                 string onayLink = Url.Action("KullaniciOnayla", "Home", new { id = kullanici.Id }, Request.Scheme);
-                EmailService.YoneticiyeOnayMailiGonder("bilalkilic618@gmail.com", kullanici.AdSoyad, kullanici.Email, onayLink);
+                if (!string.IsNullOrEmpty(_yonetim.YoneticiEmail))
+                    _email.YoneticiyeOnayMailiGonder(_yonetim.YoneticiEmail, kullanici.AdSoyad, kullanici.Email, onayLink);
 
                 TempData["BasariMesaji"] = "E-posta adresiniz başarıyla doğrulandı! 🎉 Hesabınız şu an Yönetici Onayı bekliyor. Yönetici onayladıktan sonra giriş yapabilirsiniz.";
                 return RedirectToAction("Login");
@@ -498,12 +629,14 @@ namespace Yönetim_Paneli.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult SifremiUnuttum()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public IActionResult SifremiUnuttum(string email)
         {
@@ -529,7 +662,7 @@ namespace Yönetim_Paneli.Controllers
 
             string resetLink = Url.Action("SifreSifirla", "Home", new { token = token }, Request.Scheme);
 
-            bool mailGonderildi = EmailService.SifreSifirlamaMailiGonder(kullanici.Email, resetLink);
+            bool mailGonderildi = _email.SifreSifirlamaMailiGonder(kullanici.Email, resetLink);
 
             if (mailGonderildi)
             {
@@ -543,6 +676,7 @@ namespace Yönetim_Paneli.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult SifreSifirla(string token)
         {
@@ -557,13 +691,21 @@ namespace Yönetim_Paneli.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public IActionResult SifreSifirla(string token, string yeniSifre)
         {
-            var kullanici = _context.Teknisyenler.FirstOrDefault(x => x.ResetsToken == token);
+            if (string.IsNullOrWhiteSpace(yeniSifre) || yeniSifre.Length < 6)
+            {
+                ViewBag.HataMesaji = "Yeni şifre en az 6 karakter olmalıdır!";
+                ViewBag.Token = token;
+                return View();
+            }
+
+            var kullanici = string.IsNullOrEmpty(token) ? null : _context.Teknisyenler.FirstOrDefault(x => x.ResetsToken == token);
             if (kullanici != null)
             {
-                kullanici.Sifre = yeniSifre;
+                kullanici.Sifre = SifreServisi.Hashle(yeniSifre);
                 kullanici.ResetsToken = null;
                 _context.SaveChanges();
 
@@ -575,24 +717,22 @@ namespace Yönetim_Paneli.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [HttpGet]
-        public IActionResult CikisYap()
+        public async Task<IActionResult> CikisYap()
         {
-            // Çıkış yaparken yetkileri ve depo şifre durumunu sıfırlıyoruz
+            // Oturum çerezini (yetkiler ve depo onayı dahil) siliyoruz.
+            // Eski sürümden kalan düz çerezler de temizleniyor.
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             Response.Cookies.Delete("KullaniciRol");
             Response.Cookies.Delete("KullaniciAd");
             Response.Cookies.Delete("DepoSifreOnayli");
             return RedirectToAction("Login");
         }
 
+        [AllowAnonymous]
         [HttpGet("/Login/CikisYap")]
-        public IActionResult GizliCikisYap()
-        {
-            Response.Cookies.Delete("KullaniciRol");
-            Response.Cookies.Delete("KullaniciAd");
-            Response.Cookies.Delete("DepoSifreOnayli");
-            return RedirectToAction("Login");
-        }
+        public Task<IActionResult> GizliCikisYap() => CikisYap();
 
 
         // ==========================================
@@ -650,17 +790,26 @@ namespace Yönetim_Paneli.Controllers
         [HttpGet]
         public IActionResult DepoYonetimi(string sekme = "hareketler", int? yil = null, int? ay = null, string mudurluk = "")
         {
-            // 🌟 1. KONTROL: SADECE GİRİŞ YAPMIŞ OLMASI YETERLİ (Rol engeli kaldırıldı, herkes girebilir)
-            var aktifAd = Request.Cookies["KullaniciAd"];
-            if (string.IsNullOrEmpty(aktifAd))
-            {
-                TempData["HataMesaji"] = "Lütfen önce sisteme giriş yapın!";
-                return RedirectToAction("Login");
-            }
+            // 🌟 1. KONTROL: Giriş zorunluluğu artık [Authorize] ile sağlanıyor.
 
             // 🔐 2. KONTROL: TEK ENGEL ÖZEL ŞİFRE (Şifreyi bilen içeri girer)
-            var depoSifreOnay = Request.Cookies["DepoSifreOnayli"];
-            bool sifreGerekli = (depoSifreOnay != "true");
+            bool sifreGerekli = !DepoOnayliMi();
+
+            if (sifreGerekli)
+            {
+                // Şifre girilmeden depo verileri sayfaya hiç gönderilmez (eskiden HTML'e gömülüp sadece gizleniyordu olabilir)
+                ViewBag.Envanterler = new List<Envanter>();
+                ViewBag.ToplamGiris = 0;
+                ViewBag.ToplamCikis = 0;
+                ViewBag.KalanStok = 0;
+                ViewBag.KritikStokSayisi = 0;
+                ViewBag.SifreGerekli = true;
+                ViewBag.AktifSekme = sekme;
+                ViewBag.SecilenYil = yil ?? DateTime.Now.Year;
+                ViewBag.SecilenAy = ay ?? 0;
+                ViewBag.SecilenMudurluk = mudurluk;
+                return View(new List<DepoHareket>());
+            }
 
             var hareketlerQuery = _context.DepoHareketleri.AsQueryable();
 
@@ -706,13 +855,15 @@ namespace Yönetim_Paneli.Controllers
 
         // 🔐 DEPO ŞİFRE GİRİŞ METODU
         [HttpPost]
-        public IActionResult DepoGirisYap(string depoSifresi)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DepoGirisYap(string depoSifresi)
         {
-            // Depo özel şifresi (Varsayılan: 2026* veya senin belirlediğin şifre)
-            if (depoSifresi == "2026*" || depoSifresi == "123456" || depoSifresi == "depo2026")
+            // Depo şifresi artık koddan değil ayarlardan (Yonetim:DepoSifresi) okunuyor
+            if (!string.IsNullOrEmpty(_yonetim.DepoSifresi)
+                && SifreServisi.SabitZamanliEsit(depoSifresi ?? string.Empty, _yonetim.DepoSifresi))
             {
-                // Şifre doğruysa çerez kaydedip Depo sayfasına yönlendiriyoruz
-                Response.Cookies.Append("DepoSifreOnayli", "true", new CookieOptions { Expires = DateTime.Now.AddHours(2) });
+                // Onay, şifreli oturum çerezine 2 saatlik claim olarak yazılıyor (elle taklit edilemez)
+                await DepoOnayiniAyarlaAsync(DateTime.UtcNow.AddHours(2));
                 return RedirectToAction("DepoYonetimi");
             }
 
@@ -722,9 +873,10 @@ namespace Yönetim_Paneli.Controllers
 
         // 🔐 DEPO OTURUMUNU KAPATMA METODU
         [HttpGet]
-        public IActionResult DepoCikisYap()
+        public async Task<IActionResult> DepoCikisYap()
         {
-            Response.Cookies.Delete("DepoSifreOnayli");
+            await DepoOnayiniAyarlaAsync(null);
+            Response.Cookies.Delete("DepoSifreOnayli"); // eski sürümden kalan çerez
             return RedirectToAction("Index");
         }
 
@@ -732,13 +884,11 @@ namespace Yönetim_Paneli.Controllers
         // 🚨 DEPO HAREKET EKLE & STOK TAKİBİ & MAİL 🚨
         // ==============================================================
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult DepoHareketEkle(DepoHareket hareket)
         {
-            // İşlem yapmadan önce giriş ve depo şifre kontrolü
-            var aktifAd = Request.Cookies["KullaniciAd"];
-            var depoSifreOnay = Request.Cookies["DepoSifreOnayli"];
-
-            if (string.IsNullOrEmpty(aktifAd) || depoSifreOnay != "true")
+            // İşlem yapmadan önce depo şifre kontrolü (giriş kontrolü [Authorize] ile)
+            if (!DepoOnayliMi())
             {
                 return RedirectToAction("DepoYonetimi");
             }
@@ -760,10 +910,10 @@ namespace Yönetim_Paneli.Controllers
                         if (envanter.Adet < 0) envanter.Adet = 0; // Stok eksiye düşmesin
 
                         // 3. KRİTİK STOK KONTROLÜ VE MAİL TETİKLEME
-                        if (envanter.Adet <= 2)
+                        if (envanter.Adet <= 2 && !string.IsNullOrEmpty(_yonetim.DepoSorumlusuEmail))
                         {
-                            string lutfuAbiMail = "lutfu.sevinc29@gmail.com";
-                            EmailService.KritikStokMailiGonder(envanter.MalzemeAdi, envanter.BarkodNo, envanter.Adet, lutfuAbiMail);
+                            // Alıcı adresi artık koddan değil ayarlardan (Yonetim:DepoSorumlusuEmail)
+                            _email.KritikStokMailiGonder(envanter.MalzemeAdi, envanter.BarkodNo, envanter.Adet, _yonetim.DepoSorumlusuEmail);
                         }
                     }
                     else if (hareket.IslemTuru == "GİRİŞ")
@@ -777,7 +927,7 @@ namespace Yönetim_Paneli.Controllers
             }
             catch (Exception ex)
             {
-                TempData["HataMesaji"] = "Kayıt hatası: " + ex.Message;
+                TempData["HataMesaji"] = "Kayıt sırasında bir hata oluştu: " + ex.GetType().Name;
             }
 
             return RedirectToAction("DepoYonetimi", new { sekme = "hareketler" });
@@ -790,8 +940,7 @@ namespace Yönetim_Paneli.Controllers
         [HttpGet]
         public IActionResult DepoExcelAktar()
         {
-            var aktifAd = Request.Cookies["KullaniciAd"];
-            if (string.IsNullOrEmpty(aktifAd)) return RedirectToAction("Login");
+            if (!DepoOnayliMi()) return RedirectToAction("DepoYonetimi");
 
             var hareketler = _context.DepoHareketleri.OrderByDescending(x => x.Tarih).ToList();
 
@@ -811,19 +960,16 @@ namespace Yönetim_Paneli.Controllers
         // MANUEL VERİTABANI YEDEKLEME (BACKUP)
         // ==========================================
 
+        // Eskiden: giriş kontrolü yoktu ve yedek wwwroot/backups içine yazılıyordu (linki bilen herkes indirebiliyordu).
+        // Şimdi: giriş + depo şifresi gerekli, dosya diske yazılmadan doğrudan indiriliyor.
         [HttpGet]
         public IActionResult VeritabaniYedekAl()
         {
+            if (!DepoOnayliMi()) return RedirectToAction("DepoYonetimi");
+
             try
             {
-                string backupKlasor = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "backups");
-                if (!Directory.Exists(backupKlasor))
-                {
-                    Directory.CreateDirectory(backupKlasor);
-                }
-
                 string dosyaAdi = $"BilgiIslem_SistemYedek_{DateTime.Now:yyyyMMdd_HHmm}.json";
-                string tamYol = Path.Combine(backupKlasor, dosyaAdi);
 
                 var yedekPaketi = new
                 {
@@ -834,15 +980,12 @@ namespace Yönetim_Paneli.Controllers
                     Teknisyenler = _context.Teknisyenler.Select(x => new { x.Id, x.AdSoyad, x.Email, x.SicilNo, x.Unvan }).ToList()
                 };
 
-                string jsonVeri = System.Text.Json.JsonSerializer.Serialize(yedekPaketi, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                System.IO.File.WriteAllText(tamYol, jsonVeri, System.Text.Encoding.UTF8);
-
-                byte[] fileBytes = System.IO.File.ReadAllBytes(tamYol);
+                byte[] fileBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(yedekPaketi, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
                 return File(fileBytes, "application/json", dosyaAdi);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                TempData["HataMesaji"] = "Yedek oluşturulurken hata oluştu: " + ex.Message;
+                TempData["HataMesaji"] = "Yedek oluşturulurken bir hata oluştu.";
                 return RedirectToAction("DepoYonetimi");
             }
         }

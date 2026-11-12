@@ -1,20 +1,43 @@
 ﻿using System;
 using System.Net;
 using System.Net.Mail;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Yönetim_Paneli.Ayarlar;
 
 namespace Yönetim_Paneli.Services
 {
-    public static class EmailService
+    public class EmailService
     {
+        private readonly SmtpAyarlari _ayarlar;
+        private readonly ILogger<EmailService> _logger;
+
+        public EmailService(IOptions<SmtpAyarlari> ayarlar, ILogger<EmailService> logger)
+        {
+            _ayarlar = ayarlar.Value;
+            _logger = logger;
+        }
+
+        // Tüm mailler bu tek metottan gider. SMTP bilgileri koda yazılmaz, ayarlardan (User Secrets / ortam değişkeni) okunur.
+        private void Gonder(MailMessage mail)
+        {
+            using var smtp = new SmtpClient(_ayarlar.Host, _ayarlar.Port)
+            {
+                Credentials = new NetworkCredential(_ayarlar.KullaniciAdi, _ayarlar.Sifre),
+                EnableSsl = _ayarlar.SslKullan
+            };
+            smtp.Send(mail);
+        }
+
         // ==========================================
         // 1. ŞİFRE SIFIRLAMA MAİLİ GÖNDERME
         // ==========================================
-        public static bool SifreSifirlamaMailiGonder(string aliciEmail, string resetLink)
+        public bool SifreSifirlamaMailiGonder(string aliciEmail, string resetLink)
         {
             try
             {
                 var mail = new MailMessage();
-                mail.From = new MailAddress("bilalkilic618@gmail.com", "bilaltech Bilgi İşlem");
+                mail.From = new MailAddress(_ayarlar.GonderenAdres, "bilaltech Bilgi İşlem");
                 mail.To.Add(aliciEmail);
                 mail.Subject = "🔐 Şifre Sıfırlama Talebi - bilaltech";
                 mail.IsBodyHtml = true;
@@ -32,16 +55,12 @@ namespace Yönetim_Paneli.Services
                         <p style='color: #64748b; font-size: 0.8rem;'>Bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.</p>
                     </div>";
 
-                using (var smtp = new SmtpClient("smtp.gmail.com", 587))
-                {
-                    smtp.Credentials = new NetworkCredential("bilalkilic618@gmail.com", "gqgpsnxsbniyhqrh");
-                    smtp.EnableSsl = true;
-                    smtp.Send(mail);
-                }
+                Gonder(mail);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Mail gönderilemedi.");
                 return false;
             }
         }
@@ -49,12 +68,12 @@ namespace Yönetim_Paneli.Services
         // ==========================================
         // 2. YENİ KAYIT E-POSTA ONAY KODU GÖNDERME
         // ==========================================
-        public static bool OnayKoduGonder(string aliciEmail, string onayKodu)
+        public bool OnayKoduGonder(string aliciEmail, string onayKodu)
         {
             try
             {
                 var mail = new MailMessage();
-                mail.From = new MailAddress("bilalkilic618@gmail.com", "bilaltech Bilgi İşlem");
+                mail.From = new MailAddress(_ayarlar.GonderenAdres, "bilaltech Bilgi İşlem");
                 mail.To.Add(aliciEmail);
                 mail.Subject = "🔑 E-Posta Onay Kodu - bilaltech";
                 mail.IsBodyHtml = true;
@@ -72,16 +91,12 @@ namespace Yönetim_Paneli.Services
                         <p style='color: #64748b; font-size: 0.8rem;'>Bu doğrulama kodunu güvenlik nedeniyle kimseyle paylaşmayın.</p>
                     </div>";
 
-                using (var smtp = new SmtpClient("smtp.gmail.com", 587))
-                {
-                    smtp.Credentials = new NetworkCredential("bilalkilic618@gmail.com", "gqgpsnxsbniyhqrh");
-                    smtp.EnableSsl = true;
-                    smtp.Send(mail);
-                }
+                Gonder(mail);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Mail gönderilemedi.");
                 return false;
             }
         }
@@ -89,12 +104,12 @@ namespace Yönetim_Paneli.Services
         // ==========================================
         // 3. YÖNETİCİYE BİLDİRİM MAİLİ (TEK TIKLA ONAY)
         // ==========================================
-        public static bool YoneticiyeOnayMailiGonder(string yoneticiEmail, string yeniKullaniciAd, string yeniKullaniciEmail, string onayLink)
+        public bool YoneticiyeOnayMailiGonder(string yoneticiEmail, string yeniKullaniciAd, string yeniKullaniciEmail, string onayLink)
         {
             try
             {
                 var mail = new MailMessage();
-                mail.From = new MailAddress("bilalkilic618@gmail.com", "bilaltech Otomasyon");
+                mail.From = new MailAddress(_ayarlar.GonderenAdres, "bilaltech Otomasyon");
                 mail.To.Add(yoneticiEmail);
                 mail.Subject = "🚨 YENİ KULLANICI ONAY BEKLİYOR - bilaltech";
                 mail.IsBodyHtml = true;
@@ -106,8 +121,8 @@ namespace Yönetim_Paneli.Services
                         <p style='color: #cbd5e1;'>Sisteme yeni bir kullanıcı kaydoldu ve e-postasını doğruladı:</p>
                         
                         <div style='background: #1e293b; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #334155;'>
-                            <p style='margin: 5px 0;'><strong>Ad Soyad:</strong> {yeniKullaniciAd}</p>
-                            <p style='margin: 5px 0;'><strong>E-Posta:</strong> {yeniKullaniciEmail}</p>
+                            <p style='margin: 5px 0;'><strong>Ad Soyad:</strong> {WebUtility.HtmlEncode(yeniKullaniciAd)}</p>
+                            <p style='margin: 5px 0;'><strong>E-Posta:</strong> {WebUtility.HtmlEncode(yeniKullaniciEmail)}</p>
                         </div>
 
                         <p style='color: #cbd5e1;'>Bu kullanıcının sisteme giriş yapmasına izin vermek istiyorsanız aşağıdaki butona tıklayın:</p>
@@ -119,30 +134,26 @@ namespace Yönetim_Paneli.Services
                         </div>
                     </div>";
 
-                using (var smtp = new SmtpClient("smtp.gmail.com", 587))
-                {
-                    smtp.Credentials = new NetworkCredential("bilalkilic618@gmail.com", "gqgpsnxsbniyhqrh");
-                    smtp.EnableSsl = true;
-                    smtp.Send(mail);
-                }
+                Gonder(mail);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Mail gönderilemedi.");
                 return false;
             }
         }
 
         // ==========================================
-        // 4. LÜTFÜ ABİ İÇİN KRİTİK STOK BİLDİRİM MAİLİ
+        // 4. DEPO SORUMLUSU İÇİN KRİTİK STOK BİLDİRİM MAİLİ
         // ==========================================
-        public static bool KritikStokMailiGonder(string malzemeAdi, string barkodNo, int kalanAdet, string lutfuAbiEmail)
+        public bool KritikStokMailiGonder(string malzemeAdi, string barkodNo, int kalanAdet, string depoSorumlusuEmail)
         {
             try
             {
                 var mail = new MailMessage();
-                mail.From = new MailAddress("bilalkilic618@gmail.com", "bilaltech Depo Otomasyonu");
-                mail.To.Add(lutfuAbiEmail);
+                mail.From = new MailAddress(_ayarlar.GonderenAdres, "bilaltech Depo Otomasyonu");
+                mail.To.Add(depoSorumlusuEmail);
                 mail.Subject = $"🚨 KRİTİK STOK UYARISI: {malzemeAdi}";
                 mail.IsBodyHtml = true;
 
@@ -153,8 +164,8 @@ namespace Yönetim_Paneli.Services
                         <p style='color: #cbd5e1;'>Bilgi İşlem depomuzdaki bir donanımın stok seviyesi <strong>kritik sınıra (2 ve altı)</strong> ulaşmıştır.</p>
                         
                         <div style='background: #1e293b; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ef4444;'>
-                            <p style='margin: 5px 0; font-size: 16px; color: #cbd5e1;'><strong>Malzeme Adı:</strong> {malzemeAdi}</p>
-                            <p style='margin: 5px 0; font-size: 16px; color: #cbd5e1;'><strong>Barkod No:</strong> {(string.IsNullOrEmpty(barkodNo) ? "Yok" : barkodNo)}</p>
+                            <p style='margin: 5px 0; font-size: 16px; color: #cbd5e1;'><strong>Malzeme Adı:</strong> {WebUtility.HtmlEncode(malzemeAdi)}</p>
+                            <p style='margin: 5px 0; font-size: 16px; color: #cbd5e1;'><strong>Barkod No:</strong> {(string.IsNullOrEmpty(barkodNo) ? "Yok" : WebUtility.HtmlEncode(barkodNo))}</p>
                             <p style='margin: 5px 0; font-size: 18px; color: #ef4444;'><strong>Elde Kalan Stok: {kalanAdet} Adet</strong></p>
                         </div>
                         
@@ -164,16 +175,12 @@ namespace Yönetim_Paneli.Services
                         <p style='font-size: 12px; color: #64748b; text-align: center;'>Bu mesaj bilaltech Depo Otomasyonu tarafından otomatik oluşturulmuştur.</p>
                     </div>";
 
-                using (var smtp = new SmtpClient("smtp.gmail.com", 587))
-                {
-                    smtp.Credentials = new NetworkCredential("bilalkilic618@gmail.com", "gqgpsnxsbniyhqrh");
-                    smtp.EnableSsl = true;
-                    smtp.Send(mail);
-                }
+                Gonder(mail);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Mail gönderilemedi.");
                 return false;
             }
         }

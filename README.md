@@ -16,10 +16,10 @@ Uygulamanın çalışan sürümünü (Deploy) aşağıdaki bağlantıdan test ed
 ## ⚙️ Mimari ve Teknolojiler (Tech Stack)
 Proje, sürdürülebilirlik ve modern standartlar gözetilerek geliştirilmiştir.
 
-* **Backend:** C#, .NET 8 Core MVC
+* **Backend:** C#, ASP.NET Core MVC (.NET 10)
 * **Veritabanı:** MS SQL Server, Entity Framework Core (Code-First Approach)
 * **Frontend:** HTML5, CSS3, Bootstrap 5, JavaScript, Chart.js
-* **Güvenlik:** Role-Based Authorization, Cookie Authentication
+* **Güvenlik:** ASP.NET Core Cookie Authentication, `[Authorize]` ve policy tabanlı yetkilendirme, PBKDF2 ile şifre hash'leme (`PasswordHasher`), AntiForgery token
 * **Bildirim Sistemi:** Otomatik SMTP E-Posta Entegrasyonu (OTP & Stok Uyarıları)
 <img width="1877" height="971" alt="image" src="https://github.com/user-attachments/assets/826b9938-3b92-4a2b-b522-e41d98f06951" />
 
@@ -31,4 +31,23 @@ Proje, sürdürülebilirlik ve modern standartlar gözetilerek geliştirilmişti
 <img width="1915" height="878" alt="image" src="https://github.com/user-attachments/assets/636dfa1b-9388-41be-965f-03a04e573f49" />
 
 ## 📂 Kurulum (Geliştiriciler İçin)
-Projeyi lokalinizde ayağa kaldırmak için `appsettings.json` içerisindeki veritabanı (Connection String) ve SMTP ayarlarını kendi ortamınıza göre düzenleyip, Package Manager Console üzerinden `Update-Database` komutu ile migrasyonları uygulamanız yeterlidir.
+Gizli bilgiler (veritabanı şifresi, SMTP şifresi, admin ve depo şifresi) **koda veya `appsettings.json`'a yazılmaz.**
+
+**1. Geliştirme ortamı (User Secrets):** Proje klasöründe şu komutları çalıştırın:
+```bash
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=...;Database=...;User Id=...;Password=...;TrustServerCertificate=True;MultipleActiveResultSets=true;"
+dotnet user-secrets set "Smtp:KullaniciAdi" "ornek@gmail.com"
+dotnet user-secrets set "Smtp:GonderenAdres" "ornek@gmail.com"
+dotnet user-secrets set "Smtp:Sifre" "GMAIL_UYGULAMA_SIFRESI"
+dotnet user-secrets set "Yonetim:AdminKullaniciAdi" "admin"
+dotnet user-secrets set "Yonetim:AdminSifre" "GUCLU_BIR_SIFRE"
+dotnet user-secrets set "Yonetim:DepoSifresi" "DEPO_SIFRESI"
+dotnet user-secrets set "Yonetim:YoneticiEmail" "yonetici@ornek.com"
+dotnet user-secrets set "Yonetim:DepoSorumlusuEmail" "depo@ornek.com"
+```
+
+**2. Sunucu (canlı ortam):** Aynı değerleri ortam değişkeni olarak girin. İki nokta yerine çift alt çizgi kullanılır: `Smtp__Sifre`, `Yonetim__AdminSifre`, `ConnectionStrings__DefaultConnection` vb.
+
+**3. Veritabanı:** Package Manager Console üzerinden `Update-Database` komutu ile migrasyonları uygulayın.
+
+> Mevcut kullanıcıların düz metin şifreleri, ilk başarılı girişte otomatik olarak hash'e çevrilir.

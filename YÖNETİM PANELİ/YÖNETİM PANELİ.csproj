@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>YÖNETİM_PANELİ</RootNamespace>
+    <!-- Geliştirmede gizli bilgiler için: dotnet user-secrets set "Smtp:Sifre" "..." -->
+    <UserSecretsId>6c744871-3ccf-441e-9c70-3eff8e823261</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

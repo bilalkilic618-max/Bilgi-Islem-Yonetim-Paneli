@@ -175,9 +175,12 @@
                                                                             <i class="bx bx-check me-1"></i>Onayla
                                                                         </a>
                                                                     }
-                                                                    <a href="/Home/PersonelSil/@item.Id" class="btn btn-sm btn-tech-secondary py-1 px-2 text-danger border-danger" onclick="return confirm('Bu personeli silmek istediğine emin misin kanka?')">
-                                                                        <i class="bx bx-trash me-1"></i>Sistemden Kaldır
-                                                                    </a>
+                                                                    <form action="/Home/PersonelSil/@item.Id" method="post" class="d-inline m-0" onsubmit="return confirm('Bu personeli silmek istediğinize emin misiniz?')">
+                                                                        @Html.AntiForgeryToken()
+                                                                        <button type="submit" class="btn btn-sm btn-tech-secondary py-1 px-2 text-danger border-danger">
+                                                                            <i class="bx bx-trash me-1"></i>Sistemden Kaldır
+                                                                        </button>
+                                                                    </form>
                                                                 </div>
                                                             </td>
                                                         </tr>
