@@ -153,7 +153,10 @@
                                                     <td class="text-center">
                                                         <div class="d-flex justify-content-center gap-1">
                                                             <a href="/Home/EnvanterDuzenle/@item.Id" class="btn btn-sm btn-outline-warning">Düzenle</a>
-                                                            <a href="/Home/EnvanterSil/@item.Id" onclick="return confirm('Bu envanteri silmek istediğinize emin misiniz?')" class="btn btn-sm btn-outline-danger">Sil</a>
+                                                            <form action="/Home/EnvanterSil/@item.Id" method="post" class="d-inline m-0" onsubmit="return confirm('Bu envanteri silmek istediğinize emin misiniz?')">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                                                            </form>
                                                         </div>
                                                     </td>
                                                 </tr>

@@ -139,12 +139,18 @@
                                     <div class="d-flex flex-wrap gap-1">
                                         @if (item.Durum != "Çözüldü" && item.Durum != "Tamamlandı" && item.Durum != "ÇÖZÜLDÜ")
                                         {
-                                            <a href="/Home/DurumCozulduYap/@item.Id" class="btn btn-sm btn-outline-success" title="Çözüldü İşaretle">
-                                                <i class="bx bx-check"></i>
-                                            </a>
+                                            <form action="/Home/DurumCozulduYap/@item.Id" method="post" class="d-inline m-0">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Çözüldü İşaretle">
+                                                    <i class="bx bx-check"></i>
+                                                </button>
+                                            </form>
                                         }
                                         <a href="/Home/ArizaDuzenle/@item.Id" class="btn btn-sm btn-outline-primary"><i class="bx bx-edit"></i></a>
-                                        <a href="/Home/ArizaSil/@item.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Silmek istediğinize emin misiniz?');"><i class="bx bx-trash"></i></a>
+                                        <form action="/Home/ArizaSil/@item.Id" method="post" class="d-inline m-0" onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bx bx-trash"></i></button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
