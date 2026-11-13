@@ -633,7 +633,31 @@ namespace Yönetim_Paneli.Controllers
         [HttpGet]
         public IActionResult SifremiUnuttum()
         {
+            // SifreSifirla'dan süresi dolmuş/geçersiz link nedeniyle yönlendirildiyse mesajı göster
+            if (TempData["HataMesaji"] is string hata) ViewBag.HataMesaji = hata;
             return View();
+        }
+
+        private static readonly TimeSpan ResetTokenSuresi = TimeSpan.FromHours(1);
+        private const string ResetLinkSuresiDolduMesaji = "Linkin süresi dolmuş, tekrar şifre sıfırlama isteyin.";
+
+        // Token'a ait kullanıcıyı döner; token yok/bilinmiyor/süresi dolmuşsa null.
+        // Süresi dolmuş token veritabanından temizlenir.
+        private Teknisyen? ResetTokenKullanicisi(string? token)
+        {
+            if (string.IsNullOrEmpty(token)) return null;
+
+            var kullanici = _context.Teknisyenler.FirstOrDefault(x => x.ResetsToken == token);
+            if (kullanici == null) return null;
+
+            if (kullanici.ResetsTokenBitis == null || kullanici.ResetsTokenBitis <= DateTime.UtcNow)
+            {
+                kullanici.ResetsToken = null;
+                kullanici.ResetsTokenBitis = null;
+                _context.SaveChanges();
+                return null;
+            }
+            return kullanici;
         }
 
         [AllowAnonymous]
@@ -656,8 +680,10 @@ namespace Yönetim_Paneli.Controllers
                 return View();
             }
 
-            string token = Guid.NewGuid().ToString();
+            // Kriptografik olarak güvenli 256 bit rastgele token (URL'de sorunsuz taşınması için hex)
+            string token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
             kullanici.ResetsToken = token;
+            kullanici.ResetsTokenBitis = DateTime.UtcNow.Add(ResetTokenSuresi);
             _context.SaveChanges();
 
             string resetLink = Url.Action("SifreSifirla", "Home", new { token = token }, Request.Scheme);
@@ -680,11 +706,10 @@ namespace Yönetim_Paneli.Controllers
         [HttpGet]
         public IActionResult SifreSifirla(string token)
         {
-            var kullanici = _context.Teknisyenler.FirstOrDefault(x => x.ResetsToken == token);
-            if (kullanici == null)
+            if (ResetTokenKullanicisi(token) == null)
             {
-                TempData["HataMesaji"] = "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş!";
-                return RedirectToAction("Login");
+                TempData["HataMesaji"] = ResetLinkSuresiDolduMesaji;
+                return RedirectToAction("SifremiUnuttum");
             }
 
             ViewBag.Token = token;
@@ -702,19 +727,20 @@ namespace Yönetim_Paneli.Controllers
                 return View();
             }
 
-            var kullanici = string.IsNullOrEmpty(token) ? null : _context.Teknisyenler.FirstOrDefault(x => x.ResetsToken == token);
-            if (kullanici != null)
+            var kullanici = ResetTokenKullanicisi(token);
+            if (kullanici == null)
             {
-                kullanici.Sifre = SifreServisi.Hashle(yeniSifre);
-                kullanici.ResetsToken = null;
-                _context.SaveChanges();
-
-                TempData["BasariMesaji"] = "Şifreniz başarıyla güncellendi! Yeni şifrenizle giriş yapabilirsiniz.";
-                return RedirectToAction("Login");
+                TempData["HataMesaji"] = ResetLinkSuresiDolduMesaji;
+                return RedirectToAction("SifremiUnuttum");
             }
 
-            ViewBag.HataMesaji = "İşlem başarısız. Lütfen tekrar deneyin.";
-            return View();
+            kullanici.Sifre = SifreServisi.Hashle(yeniSifre);
+            kullanici.ResetsToken = null;
+            kullanici.ResetsTokenBitis = null;
+            _context.SaveChanges();
+
+            TempData["BasariMesaji"] = "Şifreniz başarıyla güncellendi! Yeni şifrenizle giriş yapabilirsiniz.";
+            return RedirectToAction("Login");
         }
 
         [AllowAnonymous]

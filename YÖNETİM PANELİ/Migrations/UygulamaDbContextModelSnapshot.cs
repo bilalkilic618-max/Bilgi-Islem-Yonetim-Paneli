@@ -229,6 +229,9 @@ namespace YÖNETİM_PANELİ.Migrations
                     b.Property<string>("ResetsToken")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("ResetsTokenBitis")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("SicilNo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
