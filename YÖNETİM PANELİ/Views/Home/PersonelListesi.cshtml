@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<Yönetim_Paneli.Models.Teknisyen>
 @{
     Layout = null;
+    // Onaylama ve silme sadece süper admin oturumunda çalışır; diğerlerine buton gösterilmez.
+    bool adminMi = User.HasClaim(Yönetim_Paneli.Ayarlar.YetkiSabitleri.AdminClaim, "true");
 }
 <!DOCTYPE html>
 <html lang="tr" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="~/assets/" data-template="vertical-menu-template-free">
@@ -103,6 +105,7 @@
 
                 <div class="content-wrapper">
                     <div class="container-xxl flex-grow-1 container-p-y">
+                        <partial name="_TempDataMesajlari" />
                         <div class="row">
                             <div class="col-lg-12 mb-4">
                                 <div class="card tech-card">
@@ -169,18 +172,21 @@
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex gap-2">
-                                                                    @if (!item.YoneticiOnayliMi && item.EmailOnayliMi)
+                                                                    @if (adminMi && !item.YoneticiOnayliMi && item.EmailOnayliMi)
                                                                     {
                                                                         <a href="/Home/KullaniciOnayla/@item.Id" class="btn btn-sm btn-success py-1 px-2">
                                                                             <i class="bx bx-check me-1"></i>Onayla
                                                                         </a>
                                                                     }
+                                                                    @if (adminMi)
+                                                                    {
                                                                     <form action="/Home/PersonelSil/@item.Id" method="post" class="d-inline m-0" onsubmit="return confirm('Bu personeli silmek istediğinize emin misiniz?')">
                                                                         @Html.AntiForgeryToken()
                                                                         <button type="submit" class="btn btn-sm btn-tech-secondary py-1 px-2 text-danger border-danger">
                                                                             <i class="bx bx-trash me-1"></i>Sistemden Kaldır
                                                                         </button>
                                                                     </form>
+                                                                    }
                                                                 </div>
                                                             </td>
                                                         </tr>

@@ -437,11 +437,15 @@ namespace Yönetim_Paneli.Controllers
         public IActionResult KullaniciOnayla(int id)
         {
             var kisi = _context.Teknisyenler.Find(id);
-            if (kisi != null)
+            if (kisi == null)
             {
-                kisi.YoneticiOnayliMi = true;
-                _context.SaveChanges();
+                TempData["HataMesaji"] = "Onaylanacak kullanıcı bulunamadı.";
+                return RedirectToAction("PersonelListesi");
             }
+
+            kisi.YoneticiOnayliMi = true;
+            _context.SaveChanges();
+            TempData["BasariMesaji"] = $"{kisi.AdSoyad} ({kisi.Email}) onaylandı, artık giriş yapabilir.";
             return RedirectToAction("PersonelListesi");
         }
 
