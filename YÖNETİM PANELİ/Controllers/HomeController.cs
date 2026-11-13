@@ -398,6 +398,9 @@ namespace Yönetim_Paneli.Controllers
                 if (!string.IsNullOrEmpty(teknisyen.Sifre))
                     teknisyen.Sifre = SifreServisi.Hashle(teknisyen.Sifre);
 
+                teknisyen.KayitTarihi = DateTime.Now;
+                if (!TeknisyenRolleri.GecerliMi(teknisyen.Rol)) teknisyen.Rol = TeknisyenRolleri.Teknisyen;
+
                 _context.Teknisyenler.Add(teknisyen);
                 _context.SaveChanges();
                 return RedirectToAction("PersonelListesi");
@@ -420,33 +423,90 @@ namespace Yönetim_Paneli.Controllers
         }
 
         // ==========================================
-        // YÖNETİCİ ONAY SİSTEMİ
+        // KULLANICI YÖNETİMİ (YÖNETİCİ ONAY SİSTEMİ)
         // ==========================================
 
+        // E-postasını doğrulamış ama henüz yönetici onayı almamış kayıtlar
+        private IQueryable<Teknisyen> OnayBekleyenSorgusu() =>
+            _context.Teknisyenler.Where(x => x.EmailOnayliMi && !x.YoneticiOnayliMi);
+
         [HttpGet]
         [Authorize(Policy = "Admin")]
-        public IActionResult OnayBekleyenler()
+        public IActionResult KullaniciYonetimi(string sekme = "bekleyenler")
         {
-            var bekleyenler = _context.Teknisyenler.Where(x => x.EmailOnayliMi && !x.YoneticiOnayliMi).ToList();
-            return View(bekleyenler);
+            ViewBag.Sekme = sekme == "aktif" ? "aktif" : "bekleyenler";
+            ViewBag.Bekleyenler = OnayBekleyenSorgusu()
+                .OrderBy(x => x.KayitTarihi == null).ThenBy(x => x.KayitTarihi).ThenBy(x => x.Id)
+                .ToList();
+            ViewBag.Aktifler = _context.Teknisyenler
+                .Where(x => x.YoneticiOnayliMi)
+                .OrderBy(x => x.AdSoyad)
+                .ToList();
+            return View();
         }
 
-        // Yöneticiye giden onay mailindeki link buraya geldiği için GET kaldı; ama artık sadece admin çalıştırabilir.
+        // Eski bağlantılar (ve view'ı hiç olmayan eski sayfa) yeni ekrana yönlenir
         [HttpGet]
         [Authorize(Policy = "Admin")]
-        public IActionResult KullaniciOnayla(int id)
+        public IActionResult OnayBekleyenler() => RedirectToAction("KullaniciYonetimi");
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "Admin")]
+        public IActionResult KullaniciOnayla(int id, string rol)
         {
-            var kisi = _context.Teknisyenler.Find(id);
+            if (!TeknisyenRolleri.GecerliMi(rol))
+            {
+                TempData["HataMesaji"] = "Geçerli bir rol seçin.";
+                return RedirectToAction("KullaniciYonetimi");
+            }
+
+            var kisi = OnayBekleyenSorgusu().FirstOrDefault(x => x.Id == id);
             if (kisi == null)
             {
-                TempData["HataMesaji"] = "Onaylanacak kullanıcı bulunamadı.";
-                return RedirectToAction("PersonelListesi");
+                TempData["HataMesaji"] = "Onay bekleyen böyle bir kullanıcı bulunamadı.";
+                return RedirectToAction("KullaniciYonetimi");
             }
 
             kisi.YoneticiOnayliMi = true;
+            kisi.Rol = rol;
+            kisi.OnaylayanAdmin = AktifKullaniciAdi;
+            kisi.OnayTarihi = DateTime.Now;
             _context.SaveChanges();
-            TempData["BasariMesaji"] = $"{kisi.AdSoyad} ({kisi.Email}) onaylandı, artık giriş yapabilir.";
-            return RedirectToAction("PersonelListesi");
+
+            string girisLinki = Url.Action("Login", "Home", null, Request.Scheme) ?? string.Empty;
+            bool mailGitti = _email.KullaniciOnaylandiMailiGonder(kisi.Email, kisi.AdSoyad, rol, girisLinki);
+
+            TempData["BasariMesaji"] = $"{kisi.AdSoyad} ({kisi.Email}) {rol} rolüyle onaylandı."
+                + (mailGitti ? " Bilgilendirme maili gönderildi." : " Bilgilendirme maili gönderilemedi.");
+            return RedirectToAction("KullaniciYonetimi");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "Admin")]
+        public IActionResult KullaniciReddet(int id, string? sebep)
+        {
+            // Sadece onay bekleyen kayıtlar reddedilebilir; aktif kullanıcı bu yoldan silinemez.
+            var kisi = OnayBekleyenSorgusu().FirstOrDefault(x => x.Id == id);
+            if (kisi == null)
+            {
+                TempData["HataMesaji"] = "Onay bekleyen böyle bir kullanıcı bulunamadı.";
+                return RedirectToAction("KullaniciYonetimi");
+            }
+
+            sebep = string.IsNullOrWhiteSpace(sebep) ? null : sebep.Trim();
+            if (sebep?.Length > 500) sebep = sebep[..500];
+
+            // Mail, kayıt silinmeden önce gönderilir (adres ve ad bilgisi kayıttan alınıyor)
+            bool mailGitti = _email.KullaniciReddedildiMailiGonder(kisi.Email, kisi.AdSoyad, sebep);
+
+            _context.Teknisyenler.Remove(kisi);
+            _context.SaveChanges();
+
+            TempData["BasariMesaji"] = $"{kisi.AdSoyad} ({kisi.Email}) başvurusu reddedildi ve kaydı silindi."
+                + (mailGitti ? " Bilgilendirme maili gönderildi." : " Bilgilendirme maili gönderilemedi.");
+            return RedirectToAction("KullaniciYonetimi");
         }
 
 
@@ -519,7 +579,8 @@ namespace Yönetim_Paneli.Controllers
                     return View();
                 }
 
-                string rol = (personel.Unvan != null && personel.Unvan.Contains("Depo")) ? "Depo Sorumlusu" : (string.IsNullOrEmpty(personel.Unvan) ? "Teknisyen" : personel.Unvan);
+                // Rol artık Unvan'dan tahmin edilmiyor; onay sırasında admin'in seçtiği Rol alanı kullanılıyor.
+                string rol = TeknisyenRolleri.GecerliMi(personel.Rol) ? personel.Rol : TeknisyenRolleri.Teknisyen;
 
                 await OturumAcAsync(personel.AdSoyad, rol, admin: false, depoOnayBitisUtc: null);
                 return GuvenliYonlendir(returnUrl);
@@ -576,6 +637,14 @@ namespace Yönetim_Paneli.Controllers
             teknisyen.EmailOnayliMi = false;
             teknisyen.YoneticiOnayliMi = false;
 
+            // Formdan gelebilecek değerler yok sayılır: rolü ve onayı sadece admin belirler
+            teknisyen.KayitTarihi = DateTime.Now;
+            teknisyen.Rol = TeknisyenRolleri.Teknisyen;
+            teknisyen.OnaylayanAdmin = null;
+            teknisyen.OnayTarihi = null;
+            teknisyen.ResetsToken = null;
+            teknisyen.ResetsTokenBitis = null;
+
             try
             {
                 _context.Teknisyenler.Add(teknisyen);
@@ -619,10 +688,10 @@ namespace Yönetim_Paneli.Controllers
                 kullanici.EmailOnayKodu = null;
                 _context.SaveChanges();
 
-                // 📩 YÖNETİCİYE OTOMATİK BİLDİRİM MAİLİ GÖNDERİLİYOR
-                string onayLink = Url.Action("KullaniciOnayla", "Home", new { id = kullanici.Id }, Request.Scheme);
+                // 📩 YÖNETİCİYE BİLGİ MAİLİ: onay maildeki linkle değil, Kullanıcı Yönetimi ekranından (POST) yapılır
+                string yonetimLinki = Url.Action("KullaniciYonetimi", "Home", null, Request.Scheme) ?? string.Empty;
                 if (!string.IsNullOrEmpty(_yonetim.YoneticiEmail))
-                    _email.YoneticiyeOnayMailiGonder(_yonetim.YoneticiEmail, kullanici.AdSoyad, kullanici.Email, onayLink);
+                    _email.YoneticiyeYeniKullaniciBildirimiGonder(_yonetim.YoneticiEmail, kullanici.AdSoyad, kullanici.Email, yonetimLinki);
 
                 TempData["BasariMesaji"] = "E-posta adresiniz başarıyla doğrulandı! 🎉 Hesabınız şu an Yönetici Onayı bekliyor. Yönetici onayladıktan sonra giriş yapabilirsiniz.";
                 return RedirectToAction("Login");

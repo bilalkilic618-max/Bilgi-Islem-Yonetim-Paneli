@@ -64,6 +64,7 @@
                             <div>Personel Yönetimi</div>
                         </a>
                     </li>
+                    @await Component.InvokeAsync("KullaniciYonetimiMenu")
                 </ul>
             </aside>
 
@@ -174,8 +175,9 @@
                                                                 <div class="d-flex gap-2">
                                                                     @if (adminMi && !item.YoneticiOnayliMi && item.EmailOnayliMi)
                                                                     {
-                                                                        <a href="/Home/KullaniciOnayla/@item.Id" class="btn btn-sm btn-success py-1 px-2">
-                                                                            <i class="bx bx-check me-1"></i>Onayla
+                                                                        @* Onay artık Kullanıcı Yönetimi ekranında, rol seçilerek POST ile yapılıyor *@
+                                                                        <a href="/Home/KullaniciYonetimi" class="btn btn-sm btn-success py-1 px-2">
+                                                                            <i class="bx bx-user-plus me-1"></i>Onay Ekranı
                                                                         </a>
                                                                     }
                                                                     @if (adminMi)

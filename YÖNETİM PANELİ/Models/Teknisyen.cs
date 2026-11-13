@@ -40,5 +40,29 @@ namespace Yönetim_Paneli.Models
 
         // Sen (yönetici) bu kullanıcıya sisteme giriş onayı verdin mi?
         public bool YoneticiOnayliMi { get; set; } = false;
+
+        // ==========================================
+        // KULLANICI YÖNETİMİ ALANLARI
+        // ==========================================
+
+        // Kayıt anı. Bu alan eklenmeden önceki kayıtlarda bilinmediği için boş olabilir.
+        public DateTime? KayitTarihi { get; set; }
+
+        // Oturumdaki rol. Değerler TeknisyenRolleri sınıfında; onaylarken admin seçer.
+        public string Rol { get; set; } = TeknisyenRolleri.Teknisyen;
+
+        // Onayı veren adminin adı ve onay anı
+        public string? OnaylayanAdmin { get; set; }
+        public DateTime? OnayTarihi { get; set; }
+    }
+
+    public static class TeknisyenRolleri
+    {
+        public const string Teknisyen = "Teknisyen";
+        public const string DepoSorumlusu = "Depo Sorumlusu";
+
+        public static readonly string[] Tumu = { Teknisyen, DepoSorumlusu };
+
+        public static bool GecerliMi(string? rol) => rol != null && Tumu.Contains(rol);
     }
 }

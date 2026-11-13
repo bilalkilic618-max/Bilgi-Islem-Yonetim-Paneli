@@ -1,0 +1,14 @@
+@model int
+@{
+    bool aktif = Context.Request.Path.Value?.Contains("KullaniciYonetimi", StringComparison.OrdinalIgnoreCase) == true;
+}
+<li class="menu-item @(aktif ? "active" : "")">
+    <a href="/Home/KullaniciYonetimi" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-user-plus"></i>
+        <div>Kullanıcı Yönetimi</div>
+        @if (Model > 0)
+        {
+            <span class="badge rounded-pill bg-danger ms-auto" title="Onay bekleyen kullanıcı">@Model</span>
+        }
+    </a>
+</li>
