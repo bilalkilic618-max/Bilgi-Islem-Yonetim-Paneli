@@ -25,6 +25,9 @@ namespace Yönetim_Paneli.Models
         // Şifre sıfırlama linkinde gönderilecek benzersiz GUID token
         public string? ResetsToken { get; set; }
 
+        // Şifre sıfırlama token'ının geçerlilik bitişi (UTC). Boşsa token geçersiz sayılır.
+        public DateTime? ResetsTokenBitis { get; set; }
+
         // ==========================================
         // YENİ E-POSTA DOĞRULAMA VE YÖNETİCİ ONAY ALANLARI
         // ==========================================
