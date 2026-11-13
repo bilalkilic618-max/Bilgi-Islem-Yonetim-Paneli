@@ -534,12 +534,12 @@ namespace Yönetim_Paneli.Controllers
                 && kullaniciAdi == _yonetim.AdminKullaniciAdi
                 && SifreServisi.SabitZamanliEsit(sifre, _yonetim.AdminSifre))
             {
-                var adminPersonel = _context.Teknisyenler.FirstOrDefault(x => x.AdSoyad.Contains("Muhammed Bilal") || x.Email.Contains("bilal"));
+                // Admin'in görünen adı ve unvanı ayardan gelir. Eskiden e-postasında "bilal" geçen ilk teknisyenin
+                // adı alınıyordu; bu, başka bir kullanıcının adını (ör. OnaylayanAdmin alanına) yazabiliyordu.
+                string adminAd = string.IsNullOrWhiteSpace(_yonetim.AdminAdSoyad) ? "Sistem Yöneticisi" : _yonetim.AdminAdSoyad.Trim();
+                string adminUnvan = string.IsNullOrWhiteSpace(_yonetim.AdminUnvan) ? "Sistem Yöneticisi" : _yonetim.AdminUnvan.Trim();
 
-                string gercekAd = adminPersonel != null ? adminPersonel.AdSoyad : "Muhammed Bilal Kılıç";
-                string gercekRol = adminPersonel != null && !string.IsNullOrEmpty(adminPersonel.Unvan) ? adminPersonel.Unvan : "Sistem Yöneticisi";
-
-                await OturumAcAsync(gercekAd, gercekRol, admin: true, depoOnayBitisUtc: null);
+                await OturumAcAsync(adminAd, adminUnvan, admin: true, depoOnayBitisUtc: null);
                 return GuvenliYonlendir(returnUrl);
             }
 
