@@ -1,0 +1,147 @@
+@using Yönetim_Paneli.Models
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+    var bekleyenler = (List<Teknisyen>)ViewBag.Bekleyenler;
+    var aktifler = (List<Teknisyen>)ViewBag.Aktifler;
+    string sekme = (string)ViewBag.Sekme;
+
+    string Tarih(DateTime? t) => t.HasValue ? t.Value.ToString("dd.MM.yyyy HH:mm") : "Bilinmiyor";
+    string BeklemeSuresi(DateTime? kayit)
+    {
+        if (!kayit.HasValue) return "Bilinmiyor";
+        int gun = (DateTime.Now.Date - kayit.Value.Date).Days;
+        return gun <= 0 ? "Bugün" : $"{gun} gün";
+    }
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+    <div>
+        <h4 class="mb-1">Kullanıcı Yönetimi 👥</h4>
+        <small class="text-muted">Yeni üyelikleri rol seçerek onaylayın veya reddedin.</small>
+    </div>
+</div>
+
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(sekme == "bekleyenler" ? "active" : "")" href="/Home/KullaniciYonetimi?sekme=bekleyenler">
+            <i class="bx bx-time-five me-1"></i> Onay Bekleyenler
+            <span class="badge rounded-pill @(bekleyenler.Count > 0 ? "bg-danger" : "bg-secondary") ms-1">@bekleyenler.Count</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(sekme == "aktif" ? "active" : "")" href="/Home/KullaniciYonetimi?sekme=aktif">
+            <i class="bx bx-user-check me-1"></i> Aktif Kullanıcılar
+            <span class="badge rounded-pill bg-secondary ms-1">@aktifler.Count</span>
+        </a>
+    </li>
+</ul>
+
+@if (sekme == "bekleyenler")
+{
+    <div class="card">
+        <h5 class="card-header">Onay Bekleyenler</h5>
+        @if (bekleyenler.Count == 0)
+        {
+            <div class="card-body text-muted">E-postasını doğrulamış ve onay bekleyen kullanıcı yok.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Ad Soyad</th>
+                            <th>E-posta</th>
+                            <th>Unvan</th>
+                            <th>Telefon</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>Bekliyor</th>
+                            <th style="min-width: 360px;">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var k in bekleyenler)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@k.AdSoyad</td>
+                                <td>@k.Email</td>
+                                <td>@k.Unvan</td>
+                                <td>@k.Telefon</td>
+                                <td>@Tarih(k.KayitTarihi)</td>
+                                <td><span class="badge bg-label-warning">@BeklemeSuresi(k.KayitTarihi)</span></td>
+                                <td>
+                                    <form action="/Home/KullaniciOnayla" method="post" class="d-flex gap-2 mb-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@k.Id" />
+                                        <select name="rol" class="form-select form-select-sm" style="max-width: 180px;" required aria-label="Rol">
+                                            @foreach (var r in TeknisyenRolleri.Tumu)
+                                            {
+                                                <option value="@r">@r</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-success text-nowrap">
+                                            <i class="bx bx-check me-1"></i>Onayla
+                                        </button>
+                                    </form>
+                                    <form action="/Home/KullaniciReddet" method="post" class="d-flex gap-2"
+                                          onsubmit="return confirm('Bu başvuru reddedilecek ve kayıt silinecek. Emin misiniz?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@k.Id" />
+                                        <input type="text" name="sebep" maxlength="500" class="form-control form-control-sm" placeholder="Sebep (isteğe bağlı)" aria-label="Ret sebebi" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger text-nowrap">
+                                            <i class="bx bx-x me-1"></i>Reddet
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card">
+        <h5 class="card-header">Aktif Kullanıcılar</h5>
+        @if (aktifler.Count == 0)
+        {
+            <div class="card-body text-muted">Onaylanmış kullanıcı yok.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Ad Soyad</th>
+                            <th>E-posta</th>
+                            <th>Unvan</th>
+                            <th>Telefon</th>
+                            <th>Rol</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>Onaylayan</th>
+                            <th>Onay Tarihi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var k in aktifler)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@k.AdSoyad</td>
+                                <td>@k.Email</td>
+                                <td>@k.Unvan</td>
+                                <td>@k.Telefon</td>
+                                <td><span class="badge bg-label-primary">@k.Rol</span></td>
+                                <td>@Tarih(k.KayitTarihi)</td>
+                                <td>@(k.OnaylayanAdmin ?? "Bilinmiyor")</td>
+                                <td>@Tarih(k.OnayTarihi)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}

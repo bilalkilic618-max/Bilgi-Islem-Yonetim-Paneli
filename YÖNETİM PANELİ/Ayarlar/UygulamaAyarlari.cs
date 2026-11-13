@@ -22,6 +22,11 @@ namespace Yönetim_Paneli.Ayarlar
         public string AdminSifre { get; set; } = string.Empty;
         public string DepoSifresi { get; set; } = string.Empty;
 
+        // Süper admin oturumunda görünen ad ve unvan (gizli değil). Boşsa "Sistem Yöneticisi" kullanılır.
+        // Bu ad, onaylanan kullanıcılarda OnaylayanAdmin alanına da yazılır.
+        public string AdminAdSoyad { get; set; } = string.Empty;
+        public string AdminUnvan { get; set; } = string.Empty;
+
         // Bildirim alacak adresler
         public string YoneticiEmail { get; set; } = string.Empty;
         public string DepoSorumlusuEmail { get; set; } = string.Empty;

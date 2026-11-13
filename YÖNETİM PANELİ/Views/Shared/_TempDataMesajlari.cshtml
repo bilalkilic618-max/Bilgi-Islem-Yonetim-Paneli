@@ -1,0 +1,16 @@
+@* Yönlendirme sonrası TempData ile taşınan başarı/hata mesajlarını gösterir.
+   Örn. YetkisizErisim -> Index, KullaniciOnayla/KullaniciReddet -> KullaniciYonetimi. *@
+@if (TempData["BasariMesaji"] is string basari)
+{
+    <div class="alert alert-success alert-dismissible mb-3" role="alert">
+        <i class="bx bx-check-circle me-1"></i> @basari
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+@if (TempData["HataMesaji"] is string hata)
+{
+    <div class="alert alert-danger alert-dismissible mb-3" role="alert">
+        <i class="bx bx-error-circle me-1"></i> @hata
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}

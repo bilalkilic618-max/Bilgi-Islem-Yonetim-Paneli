@@ -42,6 +42,8 @@ dotnet user-secrets set "Smtp:Sifre" "GMAIL_UYGULAMA_SIFRESI"
 dotnet user-secrets set "Yonetim:AdminKullaniciAdi" "admin"
 dotnet user-secrets set "Yonetim:AdminSifre" "GUCLU_BIR_SIFRE"
 dotnet user-secrets set "Yonetim:DepoSifresi" "DEPO_SIFRESI"
+dotnet user-secrets set "Yonetim:AdminAdSoyad" "Ad Soyad"          # isteğe bağlı, boşsa "Sistem Yöneticisi"
+dotnet user-secrets set "Yonetim:AdminUnvan" "Bilgi İşlem Sorumlusu" # isteğe bağlı
 dotnet user-secrets set "Yonetim:YoneticiEmail" "yonetici@ornek.com"
 dotnet user-secrets set "Yonetim:DepoSorumlusuEmail" "depo@ornek.com"
 ```

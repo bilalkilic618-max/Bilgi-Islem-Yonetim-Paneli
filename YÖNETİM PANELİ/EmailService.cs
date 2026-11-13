@@ -102,9 +102,9 @@ namespace Yönetim_Paneli.Services
         }
 
         // ==========================================
-        // 3. YÖNETİCİYE BİLDİRİM MAİLİ (TEK TIKLA ONAY)
+        // 3. YÖNETİCİYE YENİ KULLANICI BİLDİRİMİ (sadece haber verir; onay panelden yapılır)
         // ==========================================
-        public bool YoneticiyeOnayMailiGonder(string yoneticiEmail, string yeniKullaniciAd, string yeniKullaniciEmail, string onayLink)
+        public bool YoneticiyeYeniKullaniciBildirimiGonder(string yoneticiEmail, string yeniKullaniciAd, string yeniKullaniciEmail, string yonetimLinki)
         {
             try
             {
@@ -125,13 +125,85 @@ namespace Yönetim_Paneli.Services
                             <p style='margin: 5px 0;'><strong>E-Posta:</strong> {WebUtility.HtmlEncode(yeniKullaniciEmail)}</p>
                         </div>
 
-                        <p style='color: #cbd5e1;'>Bu kullanıcının sisteme giriş yapmasına izin vermek istiyorsanız aşağıdaki butona tıklayın:</p>
-                        
+                        <p style='color: #cbd5e1;'>Başvuruyu incelemek, rol seçip onaylamak veya reddetmek için panelde Kullanıcı Yönetimi ekranını açın:</p>
+
                         <div style='margin: 25px 0; text-align: center;'>
-                            <a href='{onayLink}' style='background: #22c55e; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;'>
-                                ✅ Kullanıcıyı Onayla ve Giriş Yetkisi Ver
+                            <a href='{WebUtility.HtmlEncode(yonetimLinki)}' style='background: #3b82f6; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;'>
+                                👥 Kullanıcı Yönetimi'ni Aç
                             </a>
                         </div>
+                    </div>";
+
+                Gonder(mail);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Mail gönderilemedi.");
+                return false;
+            }
+        }
+
+        // ==========================================
+        // 3a. KULLANICIYA ONAY BİLGİSİ
+        // ==========================================
+        public bool KullaniciOnaylandiMailiGonder(string aliciEmail, string adSoyad, string rol, string girisLinki)
+        {
+            try
+            {
+                var mail = new MailMessage();
+                mail.From = new MailAddress(_ayarlar.GonderenAdres, "bilaltech Bilgi İşlem");
+                mail.To.Add(aliciEmail);
+                mail.Subject = "✅ Hesabınız Onaylandı - bilaltech";
+                mail.IsBodyHtml = true;
+
+                mail.Body = $@"
+                    <div style='font-family: Arial, sans-serif; padding: 25px; background-color: #0f172a; color: #ffffff; border-radius: 10px; max-width: 500px;'>
+                        <h2 style='color: #22c55e;'>Hesabınız Onaylandı</h2>
+                        <p style='color: #cbd5e1;'>Merhaba {WebUtility.HtmlEncode(adSoyad)},</p>
+                        <p style='color: #cbd5e1;'>Bilgi İşlem Destek Portalı üyeliğiniz yönetici tarafından onaylandı. Sisteme <strong>{WebUtility.HtmlEncode(rol)}</strong> rolüyle giriş yapabilirsiniz.</p>
+
+                        <div style='margin: 25px 0; text-align: center;'>
+                            <a href='{WebUtility.HtmlEncode(girisLinki)}' style='background: #22c55e; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;'>Giriş Yap</a>
+                        </div>
+                    </div>";
+
+                Gonder(mail);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Mail gönderilemedi.");
+                return false;
+            }
+        }
+
+        // ==========================================
+        // 3b. KULLANICIYA RET BİLGİSİ
+        // ==========================================
+        public bool KullaniciReddedildiMailiGonder(string aliciEmail, string adSoyad, string? sebep)
+        {
+            try
+            {
+                var mail = new MailMessage();
+                mail.From = new MailAddress(_ayarlar.GonderenAdres, "bilaltech Bilgi İşlem");
+                mail.To.Add(aliciEmail);
+                mail.Subject = "Üyelik Başvurunuz Hakkında - bilaltech";
+                mail.IsBodyHtml = true;
+
+                string sebepBlogu = string.IsNullOrEmpty(sebep)
+                    ? string.Empty
+                    : $@"<div style='background: #1e293b; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ef4444;'>
+                            <p style='margin: 0; color: #cbd5e1;'><strong>Açıklama:</strong> {WebUtility.HtmlEncode(sebep)}</p>
+                         </div>";
+
+                mail.Body = $@"
+                    <div style='font-family: Arial, sans-serif; padding: 25px; background-color: #0f172a; color: #ffffff; border-radius: 10px; max-width: 500px;'>
+                        <h2 style='color: #ef4444;'>Üyelik Başvurunuz Onaylanmadı</h2>
+                        <p style='color: #cbd5e1;'>Merhaba {WebUtility.HtmlEncode(adSoyad)},</p>
+                        <p style='color: #cbd5e1;'>Bilgi İşlem Destek Portalı üyelik başvurunuz yönetici tarafından onaylanmadı ve kaydınız silindi.</p>
+                        {sebepBlogu}
+                        <p style='color: #64748b; font-size: 0.85rem;'>Bir yanlışlık olduğunu düşünüyorsanız birim yetkilinizle iletişime geçin.</p>
                     </div>";
 
                 Gonder(mail);

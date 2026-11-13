@@ -226,7 +226,23 @@ namespace YÖNETİM_PANELİ.Migrations
                     b.Property<bool>("EmailOnayliMi")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("KayitTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("OnayTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OnaylayanAdmin")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ResetsToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ResetsTokenBitis")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Rol")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SicilNo")
